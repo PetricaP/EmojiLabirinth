@@ -6,14 +6,6 @@
 #include <sstream>
 #include <vector>
 
-static constexpr SimpleShader::Vertex vertices[] = {
-	{-1.0f, -1.0f,  0.0f,  0.0f},
-	{-1.0f,  1.0f,  0.0f,  1.0f},
-	{ 1.0f,  1.0f,  1.0f,  1.0f},
-	{ 1.0f, -1.0f,  1.0f,  0.0f}
-};
-
-static constexpr unsigned int indices[] = {0, 1, 2, 0, 2, 3};
 
 /* Entry point */
 Application *create_application() {
