@@ -1,0 +1,23 @@
+cbuffer u_Model {
+	float4x4 model;
+	float4x4 projection;
+};
+
+struct Input {
+	float2 position : POSITION;
+	float2 texCoord : TEXCOORD0;
+};
+
+struct Output {
+	float4 position : SV_POSITION;
+	float2 texCoord : TEXCOORD0;
+};
+
+Output main(Input input) {
+	Output output;
+
+	output.position = mul(mul(float4(input.position.x, input.position.y, 0, 1), model), projection);
+	output.texCoord = input.texCoord;
+
+	return output;
+}

@@ -80,10 +80,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin\build\$(Platform)\$(Configuration)\</IntDir>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)lib\DDSTextureLoader;$(ProjectDir)\lib\FW1FontWrapper;$(ProjectDir)\include</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin\build\$(Platform)\$(Configuration)\</IntDir>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)lib\DDSTextureLoader;$(ProjectDir)\lib\FW1FontWrapper;$(ProjectDir)\include</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -100,6 +102,10 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>dxgi.lib;d3d11.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Windows</SubSystem>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -127,16 +133,101 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>dxgi.lib;d3d11.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include=".clang-format" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="lib\DDSTextureLoader\DDSTextureLoader.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1ColorRGBA.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1ColorRGBAInterface.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1DWriteRenderTarget.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1DWriteRenderTargetInterface.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1Factory.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1FactoryInterface.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1FontWrapper.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1FontWrapperInterface.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1GlyphAtlas.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1GlyphAtlasInterface.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1GlyphProvider.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1GlyphProviderInterface.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1GlyphRenderStates.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1GlyphRenderStatesInterface.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1GlyphSheet.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1GlyphSheetInterface.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1GlyphVertexDrawer.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1GlyphVertexDrawerInterface.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1StateSaver.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1TextGeometry.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1TextGeometryInterface.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1TextRenderer.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\CFW1TextRendererInterface.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\FW1FontWrapper.cpp" />
+    <ClCompile Include="lib\FW1FontWrapper\FW1Precompiled.cpp" />
+    <ClCompile Include="src\Drawable.cpp" />
+    <ClCompile Include="src\EventListener.cpp" />
+    <ClCompile Include="src\Font.cpp" />
+    <ClCompile Include="src\Game.cpp" />
+    <ClCompile Include="src\GameEventHandler.cpp" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\Renderer.cpp" />
+    <ClCompile Include="src\ShaderProgram.cpp" />
+    <ClCompile Include="src\SimpleShader.cpp" />
+    <ClCompile Include="src\Sprite.cpp" />
+    <ClCompile Include="src\Texture.cpp" />
+    <ClCompile Include="src\Timer.cpp" />
+    <ClCompile Include="src\VertexBuffer.cpp" />
+    <ClCompile Include="src\Window.cpp" />
+    <ClCompile Include="src\WindowWIN32.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\Header.h" />
+    <ClInclude Include="include\Application.h" />
+    <ClInclude Include="include\ConstantBuffer.h" />
+    <ClInclude Include="include\Drawable.h" />
+    <ClInclude Include="include\Event.h" />
+    <ClInclude Include="include\EventHandler.h" />
+    <ClInclude Include="include\EventListener.h" />
+    <ClInclude Include="include\FileUtils.h" />
+    <ClInclude Include="include\Font.h" />
+    <ClInclude Include="include\Game.h" />
+    <ClInclude Include="include\GameEventHandler.h" />
+    <ClInclude Include="include\IndexBuffer.h" />
+    <ClInclude Include="include\InputControl.h" />
+    <ClInclude Include="include\InputLayout.h" />
+    <ClInclude Include="include\MathUtils.h" />
+    <ClInclude Include="include\Model.h" />
+    <ClInclude Include="include\Renderer.h" />
+    <ClInclude Include="include\Shader.h" />
+    <ClInclude Include="include\ShaderProgram.h" />
+    <ClInclude Include="include\SimpleShader.h" />
+    <ClInclude Include="include\Sprite.h" />
+    <ClInclude Include="include\Texture.h" />
+    <ClInclude Include="include\Timer.h" />
+    <ClInclude Include="include\Transform.h" />
+    <ClInclude Include="include\Utility.h" />
+    <ClInclude Include="include\VertexBuffer.h" />
+    <ClInclude Include="include\Window.h" />
+    <ClInclude Include="include\WindowWIN32.h" />
+    <ClInclude Include="lib\DDSTextureLoader\DDSTextureLoader.h" />
+    <ClInclude Include="lib\FW1FontWrapper\CFW1ColorRGBA.h" />
+    <ClInclude Include="lib\FW1FontWrapper\CFW1DWriteRenderTarget.h" />
+    <ClInclude Include="lib\FW1FontWrapper\CFW1Factory.h" />
+    <ClInclude Include="lib\FW1FontWrapper\CFW1FontWrapper.h" />
+    <ClInclude Include="lib\FW1FontWrapper\CFW1GlyphAtlas.h" />
+    <ClInclude Include="lib\FW1FontWrapper\CFW1GlyphProvider.h" />
+    <ClInclude Include="lib\FW1FontWrapper\CFW1GlyphRenderStates.h" />
+    <ClInclude Include="lib\FW1FontWrapper\CFW1GlyphSheet.h" />
+    <ClInclude Include="lib\FW1FontWrapper\CFW1GlyphVertexDrawer.h" />
+    <ClInclude Include="lib\FW1FontWrapper\CFW1Object.h" />
+    <ClInclude Include="lib\FW1FontWrapper\CFW1StateSaver.h" />
+    <ClInclude Include="lib\FW1FontWrapper\CFW1TextGeometry.h" />
+    <ClInclude Include="lib\FW1FontWrapper\CFW1TextRenderer.h" />
+    <ClInclude Include="lib\FW1FontWrapper\FW1CompileSettings.h" />
+    <ClInclude Include="lib\FW1FontWrapper\FW1FontWrapper.h" />
+    <ClInclude Include="lib\FW1FontWrapper\FW1Precompiled.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
