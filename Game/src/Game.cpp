@@ -1,11 +1,4 @@
 #include "Game.h"
-#include "Utility.h"
-#include "FileUtils.h"
-#include <fstream>
-#include <DDSTextureLoader.h>
-#include <sstream>
-#include <vector>
-
 
 /* Entry point */
 Application *create_application() {
@@ -32,8 +25,8 @@ Game::Game() : m_Window("Hello DirectX!", 800, 600), m_Renderer(m_Window),
 int Game::Run() {
 	m_Timer.Reset();
 	while (!m_Window.ShouldClose()) {
-		m_Window.PollEvents();
 		m_Timer.Tick();
+		m_Window.PollEvents();
 		Game::Update();
 		Game::Draw();
 		m_Timer.CapFrameTime(0.006f);
