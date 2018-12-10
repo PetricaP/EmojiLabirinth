@@ -35,14 +35,15 @@ void Game::Init() {
 
 	m_Texture = m_Renderer.CreateTexture("emoji.dds");
 
-	emoji = &(m_Manager.AddEntity());
+	/* Maybe just return a pointer */
+	emoji = m_Manager.AddEntity();
 	emoji->AddComponent<CTransform>();
 	emoji->AddComponent<CSprite>(m_Renderer, m_Texture);
 
 	emoji->GetComponent<CTransform>().SetScale({0.1f, 0.1f, 1.0f});
 	emoji->GetComponent<CTransform>().SetRotation({0.0f, 0.0f, 180.0f});
 
-	emoji2 = &(m_Manager.AddEntity());
+	emoji2 = m_Manager.AddEntity();
 	emoji2->AddComponent<CTransform>();
 	emoji2->AddComponent<CSprite>(m_Renderer, m_Texture);
 

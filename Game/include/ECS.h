@@ -139,11 +139,11 @@ class Manager {
 		), std::end(m_Entities));
 	}
 
-	Entity &AddEntity() {
+	Entity *AddEntity() {
 		Entity *e(new Entity(*this));
 		std::unique_ptr<Entity> pEntity {e};
 		m_Entities.emplace_back(std::move(pEntity));
-		return *e;
+		return e;
 	}
 };
 
