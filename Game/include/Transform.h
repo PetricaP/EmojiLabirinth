@@ -24,11 +24,11 @@ struct Transform {
 	}
 
 	void SetPosition(const DirectX::XMFLOAT3 &position) { m_Position = position; }
-	const DirectX::XMFLOAT3 GetPosition() const { return m_Position; }
+	const DirectX::XMFLOAT3 &GetPosition() const { return m_Position; }
 	void SetScale(const DirectX::XMFLOAT3 &scale) { m_Scale = scale; }
-	const DirectX::XMFLOAT3 GetScale() const { return m_Scale; }
+	const DirectX::XMFLOAT3 &GetScale() const { return m_Scale; }
 	void SetRotation(const DirectX::XMFLOAT3 &rotation) { m_Rotation = rotation; }
-	const DirectX::XMFLOAT3 GetRotation() const { return m_Rotation; }
+	const DirectX::XMFLOAT3 &GetRotation() const { return m_Rotation; }
 };
 
 }

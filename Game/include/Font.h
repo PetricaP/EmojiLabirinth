@@ -6,7 +6,6 @@
 namespace d3d11 {
 
 class Font {
-	enum Color { BLUE = 0xff0000ff, RED = 0xffff0000, GREEN = 0xff00ff00 };
 	static float m_ScreenX;
 	static float m_ScreenY;
 
@@ -17,6 +16,8 @@ class Font {
 	
 	static void Init(uint32_t screenX, uint32_t screenY);
 	friend class Renderer;
+
+	enum Color { BLUE = 0xff0000ff, RED = 0xffff0000, GREEN = 0xff00ff00, ORANGE = 0xff5599ff };
 };
 
 }

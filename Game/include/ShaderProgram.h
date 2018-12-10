@@ -16,11 +16,11 @@ class ShaderProgram {
   public:
 
 	ID3D11VertexShader *GetVertexShader() const {
-		return m_VertexShader.get();
+		return m_VertexShader.Get();
 	}
 
 	ID3D11PixelShader *GetPixelShader() const {
-		return m_PixelShader.get();
+		return m_PixelShader.Get();
 	}
 
 	const std::vector<char> &GetPixelShaderData() const {

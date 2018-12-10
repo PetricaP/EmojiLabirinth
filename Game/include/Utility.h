@@ -15,6 +15,8 @@
 
 #define UNUSED(x) (void)x
 
+#if defined(DEBUG) || defined(_DEBUG)
+
 inline static bool CheckD3DError(HRESULT result, int line, const char *file,
 								 const char *function) {
 	if (result == S_OK)
@@ -61,7 +63,6 @@ inline static bool CheckD3DError(HRESULT result, int line, const char *file,
 	return false;
 }
 
-#if defined(DEBUG) || defined(_DEBUG)
 #define DXCall(X)                                                              \
 	do {                                                                       \
 		HRESULT __hr = X;                                                      \
@@ -99,11 +100,16 @@ class unique_handle {
 		m_Ptr = value;
 	}
 
-	T *get() const {
+	T *Get() const {
 		return m_Ptr;
 	}
 
-	T **getAddressOf() {
+	T **GetAddressOf() {
+		return &m_Ptr;
+	}
+
+	T **ReleaseAndGetAddressOf() {
+		DX_SAFE_RELEASE(m_Ptr);
 		return &m_Ptr;
 	}
 

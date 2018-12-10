@@ -28,6 +28,8 @@ class Renderer {
 
 	D3D11_VIEWPORT m_ViewPort;
 
+	float m_ClearColor[4];
+
   public:
 	Renderer(const win32::Window &window);
 	~Renderer();
@@ -63,6 +65,8 @@ class Renderer {
 	void SetTexture(const Texture &texture, UINT slot) const;
 	void SetShader(const d3d11::Shader &shader) const;
 
+	void SetClearColor(const float color[4]);
+
 	Renderer(const Renderer &other) = delete;
 	Renderer &operator=(const Renderer &other) = delete;
 
@@ -77,7 +81,6 @@ class Renderer {
 	void InitDeviceAndContext();
 	void InitDepthStencilBuffer();
 	void InitBlendState();
-	void InitViewPort();
 };
 
 } // namespace d3d11
