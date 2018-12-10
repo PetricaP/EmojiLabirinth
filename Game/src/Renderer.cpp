@@ -55,8 +55,8 @@ void Renderer::SetShader(const d3d11::Shader &shader) const {
 	m_DeviceContext->PSSetShader(shader.GetProgram().GetPixelShader(), nullptr, 0);
 }
 
-void Renderer::SetClearColor(const float color[4]) {
-	memcpy(m_ClearColor, color, sizeof(m_ClearColor));
+void Renderer::SetClearColor(const Color &color) {
+	memcpy(m_ClearColor, &color, sizeof(m_ClearColor));
 }
 
 void Renderer::Submit(const Drawable &drawable) const {

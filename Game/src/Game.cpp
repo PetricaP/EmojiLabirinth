@@ -8,12 +8,7 @@ Application *create_application() {
 }
 
 Game::Game() : m_Window(TITLE, INITIAL_WIDTH, INITIAL_HEIGHT),
-	m_Renderer(m_Window), m_SimpleShader(m_Renderer), emoji(m_Manager.AddEntity()) {
-	m_Texture = m_Renderer.CreateTexture("emoji.dds");
-
-	emoji.AddComponent<CTransform>();
-	emoji.AddComponent<CSprite>(m_Renderer, m_Texture);
-}
+	m_Renderer(m_Window), m_SimpleShader(m_Renderer) {}
 
 int Game::Run() {
 	Init();
@@ -31,15 +26,28 @@ void Game::Init() {
 	/* Should this be done by the user? */
 	d3d11::Font::Init(m_Window.GetWidth(), m_Window.GetHeight());
 	m_Window.AddEventListener(this);
-	std::array<float, 4>color{0.5f, 0.2f, 0.2f, 1.0f};
-	m_Renderer.SetClearColor(color.data());
+
+	m_Renderer.SetClearColor(color::CHERRY);
 
 	m_MBuffer.projection = DirectX::XMMatrixScaling(m_Window.GetAspectRatio(),
 													1.0f, 1.0f);
 	m_Font = m_Renderer.CreateFont("Arial");
 
-	emoji.GetComponent<CTransform>().SetScale(DirectX::XMFLOAT3(0.1f, 0.1f, 1.0f));
-	emoji.GetComponent<CTransform>().SetRotation(DirectX::XMFLOAT3(0.0f, 0.0f, 180.0f));
+	m_Texture = m_Renderer.CreateTexture("emoji.dds");
+
+	emoji = &(m_Manager.AddEntity());
+	emoji->AddComponent<CTransform>();
+	emoji->AddComponent<CSprite>(m_Renderer, m_Texture);
+
+	emoji->GetComponent<CTransform>().SetScale({0.1f, 0.1f, 1.0f});
+	emoji->GetComponent<CTransform>().SetRotation({0.0f, 0.0f, 180.0f});
+
+	emoji2 = &(m_Manager.AddEntity());
+	emoji2->AddComponent<CTransform>();
+	emoji2->AddComponent<CSprite>(m_Renderer, m_Texture);
+
+	emoji2->GetComponent<CTransform>().SetScale({0.1f, 0.1f, 1.0f});
+	emoji2->GetComponent<CTransform>().SetRotation({0.0f, 0.0f, 180.0f});
 
 	m_Renderer.SetShader(m_SimpleShader);
 }
@@ -47,15 +55,13 @@ void Game::Init() {
 void Game::Update() {
 	static auto c{0.0f};
 
-	emoji.GetComponent<CTransform>().SetPosition(DirectX::XMFLOAT3(sinf(c), cosf(c), 0.0f));
+	emoji->GetComponent<CTransform>().SetPosition({sinf(c), cosf(c), 0.0f});
 
-	/* Basic user should not care */
-	m_MBuffer.model =  emoji.GetComponent<CTransform>().GetModel();
+	/* Basic user should not care to update the model */
+	m_MBuffer.model =  emoji->GetComponent<CTransform>().GetModel();
+
+	m_Manager.Refresh();
 	m_Manager.Update(m_Timer.DeltaTime());
-
-	std::stringstream ss;
-	ss << "X: " << emoji.GetComponent<CTransform>().GetPosition().x << '\n';
-	DEBUG_LOG(ss.str().c_str());
 
 	c += 2.0f * m_Timer.DeltaTime();
 }
@@ -64,19 +70,19 @@ void Game::Render() {
 	m_Renderer.Clear();
 
 	/* User should not see */
+	/* Maybe put the shader in the renderer */
 	m_SimpleShader.UpdateBuffer(m_MBuffer);
 
-	m_Renderer.Submit(emoji.GetComponent<CSprite>());
+	m_Renderer.Submit(emoji->GetComponent<CSprite>());
 
-	/*
-	const DirectX::XMFLOAT3 &position = m_Transform.GetPosition();
-	m_Transform.SetPosition({-position.x, -position.y, position.z});
-	m_MBuffer.model  = m_Transform.GetModel();
+	auto &pos = emoji->GetComponent<CTransform>().GetPosition();
+	emoji2->GetComponent<CTransform>().SetPosition({-pos.x, -pos.y, pos.z});
 
+	// The sprite should have a position which will be updated in the shader on draw
+	m_MBuffer.model = emoji2->GetComponent<CTransform>().GetModel();
 	m_SimpleShader.UpdateBuffer(m_MBuffer);
 
-	m_Renderer.Submit(*m_EmojiSprite);
-	*/
+	m_Renderer.Submit(emoji2->GetComponent<CSprite>());
 
 
 	m_Renderer.RenderText(m_Font, "Hello DirectX!", -0.3f, -0.2f, 0.1f, 

@@ -29,7 +29,8 @@ class Game : public Application {
 	SimpleShader::MatrixBuffer m_MBuffer;
 
 	ecs::Manager m_Manager;
-	ecs::Entity &emoji;
+	ecs::Entity *emoji;
+	ecs::Entity *emoji2;
 
   public:
 	Game();

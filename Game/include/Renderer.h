@@ -12,6 +12,23 @@
 
 class Sprite;
 
+struct Color {
+	float r, g, b, a;
+
+	Color(float r, float g, float b, float a) : r(r), g(g), b(b), a(a) {
+	}
+};
+
+namespace color {
+
+static const Color RED{1.0f, 0.0f, 0.0f, 1.0f};
+static const Color BLUE{0.0f, 0.0f, 1.0f, 1.0f};
+static const Color GREEN{0.0f, 0.0f, 0.0f, 1.0f};
+static const Color GRAY{0.2f, 0.2f, 0.2f, 1.0f};
+static const Color CHERRY{0.5f, 0.2f, 0.2f, 1.0f};
+
+}
+
 namespace d3d11 {
 
 class Renderer {
@@ -65,7 +82,7 @@ class Renderer {
 	void SetTexture(const Texture &texture, UINT slot) const;
 	void SetShader(const d3d11::Shader &shader) const;
 
-	void SetClearColor(const float color[4]);
+	void SetClearColor(const Color &color);
 
 	Renderer(const Renderer &other) = delete;
 	Renderer &operator=(const Renderer &other) = delete;
