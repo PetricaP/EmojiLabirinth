@@ -13,6 +13,9 @@ class GameRenderContext {
 	GameRenderContext(const d3d11::Renderer &renderer) : m_SimpleShader(renderer),
 		m_Renderer(renderer) {
 		m_Renderer.SetShader(m_SimpleShader);
+		m_MBuffer.projection = DirectX::XMMatrixIdentity();
+		m_MBuffer.view = DirectX::XMMatrixIdentity();
+		m_MBuffer.model = DirectX::XMMatrixIdentity();
 	}
 
 	void SetProjection(const DirectX::XMMATRIX &projection) {
@@ -21,6 +24,10 @@ class GameRenderContext {
 
 	void SetModel(const DirectX::XMMATRIX &model) {
 		m_MBuffer.model = model;
+	}
+
+	void SetView(const DirectX::XMMATRIX &view) {
+		m_MBuffer.view = view;
 	}
 
 	void UpdateShaderBuffer() {

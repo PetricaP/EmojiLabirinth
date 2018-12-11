@@ -3,6 +3,7 @@
 #include "ECS.h"
 #include "Transform.h"
 #include "InputControl.h"
+#include "Camera.h"
 #include "Sprite.h"
 
 struct CTransform : public ecs::Component, public xmm::Transform {};
@@ -45,3 +46,27 @@ struct CMovementControl : public ecs::Component {
 		}
 	}
 };
+
+/* TODO: Think of the way to make the camera component make sense */
+/* while also managing projection and view correctly */
+struct CCamera : public ecs::Component, private Camera {
+	GameRenderContext &m_RenderContext;
+	CTransform *transform;
+
+	float aspectRatio;
+
+	CCamera(GameRenderContext &renderContext, float aspectRatio = 1.0f)
+		: Camera(aspectRatio), m_RenderContext(renderContext) {}
+
+	void Init() override {
+		transform = &entity->GetComponent<CTransform>();
+	}
+
+	void Update(float deltaTime) override {
+		SetPosition(transform->GetTranslation());
+		SetRotation(transform->GetRotation().z);
+		m_RenderContext.SetView(GetViewMatrix());
+		m_RenderContext.UpdateShaderBuffer();
+	}
+};
+

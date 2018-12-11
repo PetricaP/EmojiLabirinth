@@ -16,6 +16,7 @@ class SimpleShader : public d3d11::Shader {
 	/* Doesn't really feel good */
 	struct MatrixBuffer {
 		DirectX::XMMATRIX model;
+		DirectX::XMMATRIX view;
 		DirectX::XMMATRIX projection;
 		SimpleShader *shader = nullptr;
 
@@ -26,6 +27,11 @@ class SimpleShader : public d3d11::Shader {
 
 		void UpdateProjection(const DirectX::XMMATRIX &projection) {
 			this->projection = projection;
+			shader->UpdateBuffer(*this);
+		}
+
+		void UpdateView(const DirectX::XMMATRIX &view) {
+			this->view = view;
 			shader->UpdateBuffer(*this);
 		}
 	};

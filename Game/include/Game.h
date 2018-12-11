@@ -7,6 +7,7 @@
 #include "GameEventHandler.h"
 #include "ECS.h"
 #include "Sprite.h"
+#include "Camera.h"
 #include "RenderContext.h"
 #include <memory>
 
@@ -21,6 +22,8 @@ class Game : public Application {
 	d3d11::Renderer m_Renderer;
 
 	GameRenderContext m_RenderContext;
+
+	Camera m_Camera;
 
 	d3d11::Font m_Font;
 

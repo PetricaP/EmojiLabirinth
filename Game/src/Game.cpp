@@ -8,7 +8,7 @@ Application *create_application() {
 }
 
 Game::Game() : m_Window(TITLE, INITIAL_WIDTH, INITIAL_HEIGHT),
-	m_Renderer(m_Window), m_RenderContext(m_Renderer) {}
+	m_Renderer(m_Window), m_RenderContext(m_Renderer), m_Camera(m_Window.GetAspectRatio()) {}
 
 int Game::Run() {
 	Init();
@@ -31,7 +31,7 @@ void Game::Init() {
 	bricks = &m_ECS.AddEntity();
 
 	bricks->AddComponent<CTransform>();
-	bricks->GetComponent<CTransform>().SetTranslation({0.0f, -0.3f, 1.0f});
+	bricks->GetComponent<CTransform>().SetTranslation({0.0f, -0.3f, 0.0f});
 	bricks->GetComponent<CTransform>().SetScale({0.1f, 0.1f, 1.0f});
 	bricks->GetComponent<CTransform>().SetRotation({0.0f, 0.0f, 180.0f});
 
@@ -57,10 +57,16 @@ void Game::Init() {
 void Game::Update(float deltaTime) {
 	static auto c{0.0f};
 
-	emoji->GetComponent<CTransform>().SetTranslation({sinf(c), cosf(c), 0.0f});
-
 	m_ECS.Refresh();
 	m_ECS.Update(deltaTime);
+
+	auto &transform = emoji->GetComponent<CTransform>();
+	transform.SetTranslation({sinf(c), cosf(c), 0.0f});
+
+	auto &transform2 = bricks->GetComponent<CTransform>();
+
+	m_Camera.SetPosition(transform2.GetTranslation());
+	m_RenderContext.SetView(m_Camera.GetViewMatrix());
 
 	c += 2.0f * deltaTime;
 }
@@ -106,7 +112,8 @@ void Game::ProcessWindowResizeEvent(const WindowResizeEvent &event) {
 	m_Window.SetWidth(event.GetWidth());
 
 	/* This should be managed by the camera class */
-	m_RenderContext.SetProjection(DirectX::XMMatrixScaling(m_Window.GetAspectRatio(), 1.0f, 1.0f));
+	m_RenderContext.SetProjection(
+		DirectX::XMMatrixScaling(m_Window.GetAspectRatio(), 1.0f, 1.0f));
 }
 
 void Game::OnEvent(const Event &event) {
@@ -131,7 +138,8 @@ void Game::InitSettings() {
 	m_Renderer.SetClearColor(color::CHERRY);
 	m_Renderer.EnableVSync(true);
 
-	m_RenderContext.SetProjection(DirectX::XMMatrixScaling(m_Window.GetAspectRatio(), 1.0f, 1.0f));
+	m_RenderContext.SetProjection(m_Camera.GetProjectionMatrix());
+	m_RenderContext.SetView(m_Camera.GetViewMatrix());
 
 	m_Font = m_Renderer.CreateFont("Arial");
 
