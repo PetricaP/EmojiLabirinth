@@ -8,9 +8,22 @@
 struct CTransform : public ecs::Component, public xmm::Transform {};
 
 struct CSprite : public ecs::Component, public Sprite {
+	GameRenderContext &m_RenderContext;
+	CTransform *transform;
 
-	CSprite(const d3d11::Renderer &renderer, const d3d11::Texture &texture,
-			const math::rect *rect = nullptr) : Sprite(renderer, texture, rect) {}
+	CSprite(GameRenderContext &renderContext, const d3d11::Texture &texture,
+			const math::rect *rect = nullptr) : Sprite(renderContext.m_Renderer, texture, rect),
+			m_RenderContext(renderContext) {}
+
+	void Init() override {
+		transform = &entity->GetComponent<CTransform>();
+	}
+
+	void Render() override {
+		m_RenderContext.SetModel(transform->GetModel());
+		m_RenderContext.UpdateShaderBuffer();
+		m_RenderContext.Render(*this);
+	}
 };
 
 struct CMovementControl : public ecs::Component {
@@ -27,9 +40,7 @@ struct CMovementControl : public ecs::Component {
 			auto input = control.second;
 
 			auto &oldPos = transform->GetTranslation();
-			DirectX::XMFLOAT3 newPos = {oldPos.x + direction.x * input->GetAmount() * deltaTime,
-										oldPos.y + direction.y * input->GetAmount() * deltaTime,
-										oldPos.z + direction.z * input->GetAmount() * deltaTime};
+			DirectX::XMFLOAT3 newPos = oldPos + direction * input->GetAmount() * deltaTime;
 			transform->SetTranslation(newPos);
 		}
 	}

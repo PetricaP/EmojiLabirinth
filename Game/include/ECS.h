@@ -30,6 +30,7 @@ struct Component {
 
 	virtual void Init() {}
 	virtual void Update(float deltaTime) {}
+	virtual void Render() {}
 
 	virtual ~Component() {}
 };
@@ -58,6 +59,12 @@ class Entity {
 	void Update(float deltaTime) {
 		for(auto &c : m_Components) {
 			c->Update(deltaTime);
+		}
+	}
+
+	void Render() {
+		for(auto &c : m_Components) {
+			c->Render();
 		}
 	}
 
@@ -110,6 +117,12 @@ class Manager {
 	void Update(float deltaTime) {
 		for(auto &e : m_Entities) {
 			e->Update(deltaTime);
+		}
+	}
+
+	void Render() {
+		for(auto &e : m_Entities) {
+			e->Render();
 		}
 	}
 

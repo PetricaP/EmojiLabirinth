@@ -6,8 +6,8 @@
 #include "WindowWIN32.h"
 #include "GameEventHandler.h"
 #include "ECS.h"
-#include "SimpleShader.h"
 #include "Sprite.h"
+#include "RenderContext.h"
 #include <memory>
 
 class Game : public Application {
@@ -20,20 +20,18 @@ class Game : public Application {
 	win32::Timer m_Timer;
 	d3d11::Renderer m_Renderer;
 
+	GameRenderContext m_RenderContext;
+
 	d3d11::Font m_Font;
 
-	d3d11::Texture m_Texture;
-
-	/* This should not be visible to the user */
-	/* Shader in the Application? */
-	SimpleShader m_SimpleShader;
-	SimpleShader::MatrixBuffer m_MBuffer;
+	d3d11::Texture m_EmojiTexture;
+	d3d11::Texture m_BricksTexture;
 
 	GameEventHandler m_EventHandler;
 	InputControl m_Horizontal;
 	InputControl m_Vertical;
 
-	ecs::Manager m_Manager;
+	ecs::Manager m_ECS;
 	ecs::Entity *emoji;
 	ecs::Entity *emoji2;
 
@@ -41,14 +39,14 @@ class Game : public Application {
 	Game();
 	int Run() override;
 
+  private:
 	void Init();
-	void Update();
+	void Update(float deltaTime);
+	void Render();
 
 	void OnEvent(const Event &event) override;
-
-  private:
-	void Render();
 	void ProcessMouseButtonEvent(const MouseButtonEvent &event);
 	void ProcessKeyboardEvent(const KeyboardEvent &event);
 	void ProcessWindowResizeEvent(const WindowResizeEvent &event);
+	void InitSettings();
 };

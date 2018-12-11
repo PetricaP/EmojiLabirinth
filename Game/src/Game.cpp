@@ -8,7 +8,7 @@ Application *create_application() {
 }
 
 Game::Game() : m_Window(TITLE, INITIAL_WIDTH, INITIAL_HEIGHT),
-	m_Renderer(m_Window), m_SimpleShader(m_Renderer) {}
+	m_Renderer(m_Window), m_RenderContext(m_Renderer) {}
 
 int Game::Run() {
 	Init();
@@ -16,76 +16,66 @@ int Game::Run() {
 	while (!m_Window.ShouldClose()) {
 		m_Timer.Tick();
 		m_Window.PollEvents();
-		Game::Update();
+		Game::Update(m_Timer.DeltaTime());
 		Game::Render();
 	}
 	return 0;
 }
 
 void Game::Init() {
-	/* Should this be done by the user? */
-	d3d11::Font::Init(m_Window.GetWidth(), m_Window.GetHeight());
-	m_Window.AddEventListener(this);
-
-	m_MBuffer.shader = &m_SimpleShader;
-
-	m_Renderer.SetClearColor(color::CHERRY);
-
-	m_MBuffer.projection = DirectX::XMMatrixScaling(m_Window.GetAspectRatio(),
-													1.0f, 1.0f);
+	InitSettings();
 	m_Font = m_Renderer.CreateFont("Arial");
 
-	m_Texture = m_Renderer.CreateTexture("emoji.dds");
+	m_EmojiTexture = m_Renderer.CreateTexture("emoji.dds");
+
+	m_BricksTexture = m_Renderer.CreateTexture("bricks.dds");
 
 	m_EventHandler.AddKeyControl(KeyboardEvent::Key::RIGHT, m_Horizontal, 1.0f);
 	m_EventHandler.AddKeyControl(KeyboardEvent::Key::LEFT, m_Horizontal, -1.0f);
 	m_EventHandler.AddKeyControl(KeyboardEvent::Key::UP, m_Vertical, 1.0f);
 	m_EventHandler.AddKeyControl(KeyboardEvent::Key::DOWN, m_Vertical, -1.0f);
 
-	emoji = m_Manager.AddEntity();
-	emoji->AddComponent<CTransform>();
-	emoji->AddComponent<CSprite>(m_Renderer, m_Texture);
+	emoji = m_ECS.AddEntity();
 
+	emoji->AddComponent<CTransform>();
 	emoji->GetComponent<CTransform>().SetScale({0.1f, 0.1f, 1.0f});
 	emoji->GetComponent<CTransform>().SetRotation({0.0f, 0.0f, 180.0f});
 
-	emoji2 = m_Manager.AddEntity();
+	emoji->AddComponent<CSprite>(m_RenderContext, m_BricksTexture);
+
+	emoji2 = m_ECS.AddEntity();
 
 	emoji2->AddComponent<CTransform>();
-	emoji2->GetComponent<CTransform>().SetScale({0.15f, 0.15f, 1.0f});
+	emoji2->GetComponent<CTransform>().SetTranslation({0.0f, -0.3f, 1.0f});
+	emoji2->GetComponent<CTransform>().SetScale({0.1f, 0.1f, 1.0f});
 	emoji2->GetComponent<CTransform>().SetRotation({0.0f, 0.0f, 180.0f});
 
-	emoji2->AddComponent<CSprite>(m_Renderer, m_Texture);
+	emoji2->AddComponent<CSprite>(m_RenderContext, m_EmojiTexture);
 
 	emoji2->AddComponent<CMovementControl>();
+
 	emoji2->GetComponent<CMovementControl>().controls.push_back(
 		std::make_pair(DirectX::XMFLOAT3{1, 0, 0}, &m_Horizontal));
+
 	emoji2->GetComponent<CMovementControl>().controls.push_back(
 		std::make_pair(DirectX::XMFLOAT3{0, 1, 0}, &m_Vertical));
-
-	m_Renderer.SetShader(m_SimpleShader);
 }
 
-void Game::Update() {
+void Game::Update(float deltaTime) {
 	static auto c{0.0f};
 
 	emoji->GetComponent<CTransform>().SetTranslation({sinf(c), cosf(c), 0.0f});
 
-	m_Manager.Refresh();
-	m_Manager.Update(m_Timer.DeltaTime());
+	m_ECS.Refresh();
+	m_ECS.Update(deltaTime);
 
-	c += 2.0f * m_Timer.DeltaTime();
+	c += 2.0f * deltaTime;
 }
 
 void Game::Render() {
 	m_Renderer.Clear();
 
-	/* Basic user should not care to update the model */
-	m_MBuffer.UpdateModel(emoji->GetComponent<CTransform>().GetModel());
-	m_Renderer.Submit(emoji->GetComponent<CSprite>());
-
-	m_MBuffer.UpdateModel(emoji2->GetComponent<CTransform>().GetModel());
-	m_Renderer.Submit(emoji2->GetComponent<CSprite>());
+	m_ECS.Render();
 
 	m_Renderer.RenderText(m_Font, "Hello DirectX!", -0.3f, -0.2f, 0.1f, 
 						  d3d11::Font::Color::ORANGE);
@@ -96,6 +86,7 @@ void Game::Render() {
 void Game::ProcessMouseButtonEvent(const MouseButtonEvent &event) {
 	UNUSED(event);
 	DEBUG_LOG("The mouse has been pressed.\n");
+
 	std::stringstream ss;
 	ss << "Frame Time: " << m_Timer.DeltaTime() << std::endl;
 	ss << "Total Time: " << m_Timer.TotalTime() << std::endl;
@@ -104,8 +95,6 @@ void Game::ProcessMouseButtonEvent(const MouseButtonEvent &event) {
 }
 
 void Game::ProcessKeyboardEvent(const KeyboardEvent &event) {
-	UNUSED(event);
-	DEBUG_LOG("A key has been pressed.\n");
 	if(event.GetPressed() == true) {
 		m_EventHandler.OnKeyDown(event.GetKey(), 0);
 	} else {
@@ -125,7 +114,7 @@ void Game::ProcessWindowResizeEvent(const WindowResizeEvent &event) {
 	m_Window.SetWidth(event.GetWidth());
 
 	/* This should be managed by the camera class */
-	m_MBuffer.projection = DirectX::XMMatrixScaling(m_Window.GetAspectRatio(), 1.0f, 1.0f);
+	m_RenderContext.SetProjection(DirectX::XMMatrixScaling(m_Window.GetAspectRatio(), 1.0f, 1.0f));
 }
 
 void Game::OnEvent(const Event &event) {
@@ -141,5 +130,16 @@ void Game::OnEvent(const Event &event) {
 		break;
 	default: break;
 	}
+}
+
+/* Should this be done by the user? */
+void Game::InitSettings() {
+	d3d11::Font::Init(m_Window.GetWidth(), m_Window.GetHeight());
+	m_Window.AddEventListener(this);
+
+	m_Renderer.SetClearColor(color::CHERRY);
+	m_Renderer.EnableVSync(true);
+
+	m_RenderContext.SetProjection(DirectX::XMMatrixScaling(m_Window.GetAspectRatio(), 1.0f, 1.0f));
 }
 

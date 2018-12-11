@@ -13,7 +13,7 @@ class SimpleShader : public d3d11::Shader {
   public:
 	SimpleShader(const d3d11::Renderer &renderer);
 
-	/* Seems very bad, maybe make this shader methods */
+	/* Doesn't really feel good */
 	struct MatrixBuffer {
 		DirectX::XMMATRIX model;
 		DirectX::XMMATRIX projection;

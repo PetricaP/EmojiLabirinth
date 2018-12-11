@@ -8,7 +8,7 @@
 namespace d3d11 {
 
 Renderer::Renderer(const win32::Window &window)
-	: m_Window(window), m_ClearColor{0.8f, 0.8f, 0.8f, 2.0f} {
+	: m_Window(window), m_ClearColor{0.8f, 0.8f, 0.8f, 2.0f}, m_VSyncEnabled(false) {
 	InitDeviceAndContext();
 	InitSwapChain();
 	InitRenderTarget();
@@ -17,6 +17,8 @@ Renderer::Renderer(const win32::Window &window)
 	m_ViewPort =
 		CD3D11_VIEWPORT(0.0f, 0.0f, static_cast<float>(m_Window.GetWidth()),
 						static_cast<float>(m_Window.GetHeight()));
+
+	m_SimpleShader = std::make_unique<SimpleShader>(*this);
 }
 
 Renderer::~Renderer() {
@@ -45,7 +47,7 @@ void Renderer::Clear() {
 }
 
 void Renderer::Flush() {
-	m_SwapChain->Present(0, 0);
+	m_SwapChain->Present(m_VSyncEnabled, 0);
 }
 
 void Renderer::SetShader(const d3d11::Shader &shader) const {

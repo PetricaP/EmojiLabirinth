@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <DirectXMath.h>
 
 namespace math {
 
@@ -51,4 +52,32 @@ struct rect_t {
 using rect = rect_t<float>;
 
 } // namespace math
+
+namespace DirectX {
+
+inline XMFLOAT3 operator+(const XMFLOAT3 &v1, const XMFLOAT3 &v2) {
+	return {v1.x + v2.x, v1.y + v2.y, v1.z + v2.z};
+}
+
+inline XMFLOAT3 operator-(const XMFLOAT3 &v1, const XMFLOAT3 &v2) {
+	return {v1.x - v2.x, v1.y - v2.y, v1.z - v2.z};
+}
+
+inline XMFLOAT3 operator+(const XMFLOAT3 &v1, float s) {
+	return {v1.x + s, v1.y + s, v1.z + s};
+}
+
+inline XMFLOAT3 operator+(float s, const XMFLOAT3 &v1) {
+	return {v1.x + s, v1.y + s, v1.z + s};
+}
+
+inline XMFLOAT3 operator*(const XMFLOAT3 &v1, float s) {
+	return {v1.x * s, v1.y * s, v1.z * s};
+}
+
+inline XMFLOAT3 operator*(float s, const XMFLOAT3 &v1) {
+	return {v1.x * s, v1.y * s, v1.z * s};
+}
+
+}
 

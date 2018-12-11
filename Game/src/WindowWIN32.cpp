@@ -51,7 +51,7 @@ static LRESULT CALLBACK wnd_proc(HWND hWnd, UINT msg, WPARAM wParam,
 }
 
 Window::Window(const std::string title, uint32_t width, uint32_t height)
-	: ::Window(title, width, height), m_MSG{nullptr} {
+	: ::Window(title, width, height), m_Window(nullptr), m_MSG{nullptr} {
 	WNDCLASS wc;
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = wnd_proc;

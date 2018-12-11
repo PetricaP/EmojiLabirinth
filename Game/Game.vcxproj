@@ -200,6 +200,7 @@
     <ClInclude Include="include\InputLayout.h" />
     <ClInclude Include="include\MathUtils.h" />
     <ClInclude Include="include\Model.h" />
+    <ClInclude Include="include\RenderContext.h" />
     <ClInclude Include="include\Renderer.h" />
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\ShaderProgram.h" />

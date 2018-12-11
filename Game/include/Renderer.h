@@ -11,6 +11,7 @@
 #include <string>
 
 class Sprite;
+class SimpleShader;
 
 struct Color {
 	float r, g, b, a;
@@ -46,6 +47,10 @@ class Renderer {
 	D3D11_VIEWPORT m_ViewPort;
 
 	float m_ClearColor[4];
+
+	bool m_VSyncEnabled;
+
+	std::unique_ptr<SimpleShader> m_SimpleShader;
 
   public:
 	Renderer(const win32::Window &window);
@@ -83,6 +88,7 @@ class Renderer {
 	void SetShader(const d3d11::Shader &shader) const;
 
 	void SetClearColor(const Color &color);
+	void EnableVSync(bool value) { m_VSyncEnabled = value; }
 
 	Renderer(const Renderer &other) = delete;
 	Renderer &operator=(const Renderer &other) = delete;

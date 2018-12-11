@@ -8,7 +8,7 @@ namespace win32 {
 
 class Window : public ::Window {
   private:
-	HWND m_Window = nullptr;
+	HWND m_Window;
 	MSG m_MSG;
 
   public:

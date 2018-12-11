@@ -281,6 +281,9 @@
     <ClInclude Include="include\UtilComponents.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\RenderContext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="simplePixelShader.hlsl" />
