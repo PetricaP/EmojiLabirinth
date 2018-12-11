@@ -19,6 +19,9 @@ Event *create_event(UINT msg, LPARAM lParam, WPARAM wParam) {
 		case WM_KEYDOWN:
 			e = new KeyboardEvent(time.wMilliseconds, 0, true, 1, static_cast<KeyboardEvent::Key>(wParam));
 			break;
+		case WM_KEYUP:
+			e = new KeyboardEvent(time.wMilliseconds, 0, false, 1, static_cast<KeyboardEvent::Key>(wParam));
+			break;
 		case WM_SIZE:
 			e = new WindowResizeEvent(time.wMilliseconds, 0, LOWORD(lParam), HIWORD(lParam));
 			break;

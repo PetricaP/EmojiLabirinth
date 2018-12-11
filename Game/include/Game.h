@@ -4,6 +4,7 @@
 #include "Timer.h"
 #include "Transform.h"
 #include "WindowWIN32.h"
+#include "GameEventHandler.h"
 #include "ECS.h"
 #include "SimpleShader.h"
 #include "Sprite.h"
@@ -27,6 +28,10 @@ class Game : public Application {
 	/* Shader in the Application? */
 	SimpleShader m_SimpleShader;
 	SimpleShader::MatrixBuffer m_MBuffer;
+
+	GameEventHandler m_EventHandler;
+	InputControl m_Horizontal;
+	InputControl m_Vertical;
 
 	ecs::Manager m_Manager;
 	ecs::Entity *emoji;
