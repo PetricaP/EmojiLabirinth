@@ -52,7 +52,7 @@ void Game::Init() {
 	emoji2 = m_Manager.AddEntity();
 
 	emoji2->AddComponent<CTransform>();
-	emoji2->GetComponent<CTransform>().SetScale({0.1f, 0.1f, 1.0f});
+	emoji2->GetComponent<CTransform>().SetScale({0.15f, 0.15f, 1.0f});
 	emoji2->GetComponent<CTransform>().SetRotation({0.0f, 0.0f, 180.0f});
 
 	emoji2->AddComponent<CSprite>(m_Renderer, m_Texture);
