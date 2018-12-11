@@ -32,8 +32,8 @@ class Game : public Application {
 	InputControl m_Vertical;
 
 	ecs::Manager m_ECS;
+	ecs::Entity *bricks;
 	ecs::Entity *emoji;
-	ecs::Entity *emoji2;
 
   public:
 	Game();

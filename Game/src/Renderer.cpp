@@ -78,8 +78,8 @@ void Renderer::Submit(const Drawable &drawable) const {
 }
 
 void Renderer::Submit(const Sprite &sprite) const {
-	Submit(static_cast<const Drawable &>(sprite));
 	SetTexture(sprite.m_Texture, 0);
+	Submit(static_cast<const Drawable &>(sprite));
 }
 
 VertexBuffer Renderer::CreateVertexBuffer(const void *data, UINT size) const {

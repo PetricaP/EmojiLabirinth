@@ -24,41 +24,34 @@ int Game::Run() {
 
 void Game::Init() {
 	InitSettings();
-	m_Font = m_Renderer.CreateFont("Arial");
 
 	m_EmojiTexture = m_Renderer.CreateTexture("emoji.dds");
-
 	m_BricksTexture = m_Renderer.CreateTexture("bricks.dds");
 
-	m_EventHandler.AddKeyControl(KeyboardEvent::Key::RIGHT, m_Horizontal, 1.0f);
-	m_EventHandler.AddKeyControl(KeyboardEvent::Key::LEFT, m_Horizontal, -1.0f);
-	m_EventHandler.AddKeyControl(KeyboardEvent::Key::UP, m_Vertical, 1.0f);
-	m_EventHandler.AddKeyControl(KeyboardEvent::Key::DOWN, m_Vertical, -1.0f);
+	bricks = &m_ECS.AddEntity();
 
-	emoji = m_ECS.AddEntity();
+	bricks->AddComponent<CTransform>();
+	bricks->GetComponent<CTransform>().SetTranslation({0.0f, -0.3f, 1.0f});
+	bricks->GetComponent<CTransform>().SetScale({0.1f, 0.1f, 1.0f});
+	bricks->GetComponent<CTransform>().SetRotation({0.0f, 0.0f, 180.0f});
+
+	bricks->AddComponent<CSprite>(m_RenderContext, m_BricksTexture);
+
+	bricks->AddComponent<CMovementControl>();
+
+	bricks->GetComponent<CMovementControl>().controls.push_back(
+		std::make_pair(DirectX::XMFLOAT3{1, 0, 0}, &m_Horizontal));
+
+	bricks->GetComponent<CMovementControl>().controls.push_back(
+		std::make_pair(DirectX::XMFLOAT3{0, 1, 0}, &m_Vertical));
+
+	emoji = &m_ECS.AddEntity();
 
 	emoji->AddComponent<CTransform>();
 	emoji->GetComponent<CTransform>().SetScale({0.1f, 0.1f, 1.0f});
 	emoji->GetComponent<CTransform>().SetRotation({0.0f, 0.0f, 180.0f});
 
-	emoji->AddComponent<CSprite>(m_RenderContext, m_BricksTexture);
-
-	emoji2 = m_ECS.AddEntity();
-
-	emoji2->AddComponent<CTransform>();
-	emoji2->GetComponent<CTransform>().SetTranslation({0.0f, -0.3f, 1.0f});
-	emoji2->GetComponent<CTransform>().SetScale({0.1f, 0.1f, 1.0f});
-	emoji2->GetComponent<CTransform>().SetRotation({0.0f, 0.0f, 180.0f});
-
-	emoji2->AddComponent<CSprite>(m_RenderContext, m_EmojiTexture);
-
-	emoji2->AddComponent<CMovementControl>();
-
-	emoji2->GetComponent<CMovementControl>().controls.push_back(
-		std::make_pair(DirectX::XMFLOAT3{1, 0, 0}, &m_Horizontal));
-
-	emoji2->GetComponent<CMovementControl>().controls.push_back(
-		std::make_pair(DirectX::XMFLOAT3{0, 1, 0}, &m_Vertical));
+	emoji->AddComponent<CSprite>(m_RenderContext, m_EmojiTexture);
 }
 
 void Game::Update(float deltaTime) {
@@ -79,7 +72,6 @@ void Game::Render() {
 
 	m_Renderer.RenderText(m_Font, "Hello DirectX!", -0.3f, -0.2f, 0.1f, 
 						  d3d11::Font::Color::ORANGE);
-
 	m_Renderer.Flush();
 }
 
@@ -132,7 +124,6 @@ void Game::OnEvent(const Event &event) {
 	}
 }
 
-/* Should this be done by the user? */
 void Game::InitSettings() {
 	d3d11::Font::Init(m_Window.GetWidth(), m_Window.GetHeight());
 	m_Window.AddEventListener(this);
@@ -141,5 +132,12 @@ void Game::InitSettings() {
 	m_Renderer.EnableVSync(true);
 
 	m_RenderContext.SetProjection(DirectX::XMMatrixScaling(m_Window.GetAspectRatio(), 1.0f, 1.0f));
+
+	m_Font = m_Renderer.CreateFont("Arial");
+
+	m_EventHandler.AddKeyControl(KeyboardEvent::Key::RIGHT, m_Horizontal, 1.0f);
+	m_EventHandler.AddKeyControl(KeyboardEvent::Key::LEFT, m_Horizontal, -1.0f);
+	m_EventHandler.AddKeyControl(KeyboardEvent::Key::UP, m_Vertical, 1.0f);
+	m_EventHandler.AddKeyControl(KeyboardEvent::Key::DOWN, m_Vertical, -1.0f);
 }
 
