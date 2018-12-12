@@ -25,15 +25,14 @@ int Game::Run() {
 void Game::Init() {
 	InitSettings();
 
-	m_EmojiTexture = m_Renderer.CreateTexture("emoji.dds");
-	m_BricksTexture = m_Renderer.CreateTexture("bricks.dds");
+	m_EmojiTexture = m_Renderer.CreateTexture("bricks.dds");
+	m_BricksTexture = m_Renderer.CreateTexture("emoji.dds");
 
 	bricks = &m_ECS.AddEntity();
 
 	bricks->AddComponent<CTransform2D>();
 	bricks->GetComponent<CTransform2D>().SetTranslation({0.0f, -0.3f});
 	bricks->GetComponent<CTransform2D>().SetScale({0.1f, 0.1f});
-	bricks->GetComponent<CTransform2D>().SetRotation(180.0f);
 
 	bricks->AddComponent<CSprite>(m_RenderParams, m_BricksTexture);
 
@@ -52,7 +51,7 @@ void Game::Init() {
 
 	emoji->AddComponent<CTransform2D>();
 	emoji->GetComponent<CTransform2D>().SetScale({0.1f, 0.1f});
-	emoji->GetComponent<CTransform2D>().SetRotation(180.0f);
+	emoji->GetComponent<CTransform2D>().SetTranslation({0.3f, 0.5f});
 
 	emoji->AddComponent<CSprite>(m_RenderParams, m_EmojiTexture);
 }

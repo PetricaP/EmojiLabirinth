@@ -29,8 +29,8 @@ void Camera2D::SetAspectRatio(float aspectRatio) {
 
 void Camera2D::UpdateViewMatrix() {
 	m_View = DirectX::XMMatrixTranspose(
-		//DirectX::XMMatrixRotationAxis({0, 0, 1}, DirectX::XMConvertToRadians(m_Rotation))
-		DirectX::XMMatrixTranslation(-m_Position.x, -m_Position.y, 0));
+		DirectX::XMMatrixTranslation(-m_Position.x, -m_Position.y, 0.0f)
+		* DirectX::XMMatrixRotationAxis({0.0f, 0.0f, 1.0f}, DirectX::XMConvertToRadians(m_Rotation)));
 }
 
 void Camera2D::UpdateProjectionMatrix() {

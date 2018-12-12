@@ -7,10 +7,10 @@
 
 class Sprite : public d3d11::Drawable {
 	static constexpr SimpleShader::Vertex m_Vertices[] = {
-		{-1.0f, -1.0f,  0.0f,  0.0f},
-		{-1.0f,  1.0f,  0.0f,  1.0f},
-		{ 1.0f,  1.0f,  1.0f,  1.0f},
-		{ 1.0f, -1.0f,  1.0f,  0.0f}
+		{-1.0f, -1.0f,  1.0f,  1.0f},
+		{-1.0f,  1.0f,  1.0f,  0.0f},
+		{ 1.0f,  1.0f,  0.0f,  0.0f},
+		{ 1.0f, -1.0f,  0.0f,  1.0f}
 	};
 	static constexpr unsigned int m_Indices[] = {0, 1, 2, 0, 2, 3};
 
