@@ -2,13 +2,11 @@
 
 #include "Application.h"
 #include "Timer.h"
-#include "Transform.h"
 #include "WindowWIN32.h"
 #include "GameEventHandler.h"
 #include "ECS.h"
-#include "Sprite.h"
-#include "Camera.h"
-#include "RenderContext.h"
+#include "Camera2D.h"
+#include "RenderParams.h"
 #include <memory>
 
 class Game : public Application {
@@ -21,9 +19,9 @@ class Game : public Application {
 	win32::Timer m_Timer;
 	d3d11::Renderer m_Renderer;
 
-	GameRenderContext m_RenderContext;
+	RenderParams m_RenderParams;
 
-	Camera m_Camera;
+	Camera2D m_Camera;
 
 	d3d11::Font m_Font;
 
@@ -53,3 +51,4 @@ class Game : public Application {
 	void ProcessWindowResizeEvent(const WindowResizeEvent &event);
 	void InitSettings();
 };
+

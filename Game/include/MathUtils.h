@@ -79,5 +79,29 @@ inline XMFLOAT3 operator*(float s, const XMFLOAT3 &v1) {
 	return {v1.x * s, v1.y * s, v1.z * s};
 }
 
+inline XMFLOAT2 operator+(const XMFLOAT2 &v1, const XMFLOAT2 &v2) {
+	return {v1.x + v2.x, v1.y + v2.y};
+}
+
+inline XMFLOAT2 operator-(const XMFLOAT2 &v1, const XMFLOAT2 &v2) {
+	return {v1.x - v2.x, v1.y - v2.y};
+}
+
+inline XMFLOAT2 operator+(const XMFLOAT2 &v1, float s) {
+	return {v1.x + s, v1.y + s};
+}
+
+inline XMFLOAT2 operator+(float s, const XMFLOAT2 &v1) {
+	return {v1.x + s, v1.y + s};
+}
+
+inline XMFLOAT2 operator*(const XMFLOAT2 &v1, float s) {
+	return {v1.x * s, v1.y * s};
+}
+
+inline XMFLOAT2 operator*(float s, const XMFLOAT2 &v1) {
+	return {v1.x * s, v1.y * s};
+}
+
 }
 

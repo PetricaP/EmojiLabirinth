@@ -1,6 +1,6 @@
 #include "Game.h"
 #include "UtilComponents.h"
-#include <array>
+#include <iomanip>
 
 /* Entry point */
 Application *create_application() {
@@ -8,7 +8,7 @@ Application *create_application() {
 }
 
 Game::Game() : m_Window(TITLE, INITIAL_WIDTH, INITIAL_HEIGHT),
-	m_Renderer(m_Window), m_RenderContext(m_Renderer), m_Camera(m_Window.GetAspectRatio()) {}
+	m_Renderer(m_Window), m_RenderParams(m_Renderer), m_Camera(m_Window.GetAspectRatio()) {}
 
 int Game::Run() {
 	Init();
@@ -30,45 +30,36 @@ void Game::Init() {
 
 	bricks = &m_ECS.AddEntity();
 
-	bricks->AddComponent<CTransform>();
-	bricks->GetComponent<CTransform>().SetTranslation({0.0f, -0.3f, 0.0f});
-	bricks->GetComponent<CTransform>().SetScale({0.1f, 0.1f, 1.0f});
-	bricks->GetComponent<CTransform>().SetRotation({0.0f, 0.0f, 180.0f});
+	bricks->AddComponent<CTransform2D>();
+	bricks->GetComponent<CTransform2D>().SetTranslation({0.0f, -0.3f});
+	bricks->GetComponent<CTransform2D>().SetScale({0.1f, 0.1f});
+	bricks->GetComponent<CTransform2D>().SetRotation(180.0f);
 
-	bricks->AddComponent<CSprite>(m_RenderContext, m_BricksTexture);
+	bricks->AddComponent<CSprite>(m_RenderParams, m_BricksTexture);
 
 	bricks->AddComponent<CMovementControl>();
 
 	bricks->GetComponent<CMovementControl>().controls.push_back(
-		std::make_pair(DirectX::XMFLOAT3{1, 0, 0}, &m_Horizontal));
+		std::make_pair(DirectX::XMFLOAT2{1, 0}, &m_Horizontal));
 
 	bricks->GetComponent<CMovementControl>().controls.push_back(
-		std::make_pair(DirectX::XMFLOAT3{0, 1, 0}, &m_Vertical));
+		std::make_pair(DirectX::XMFLOAT2{0, 1}, &m_Vertical));
+
+	bricks->AddComponent<CCamera2D>(m_RenderParams, m_Camera,
+								  DirectX::XMFLOAT2{0.0f, 0.5f});
 
 	emoji = &m_ECS.AddEntity();
 
-	emoji->AddComponent<CTransform>();
-	emoji->GetComponent<CTransform>().SetScale({0.1f, 0.1f, 1.0f});
-	emoji->GetComponent<CTransform>().SetRotation({0.0f, 0.0f, 180.0f});
+	emoji->AddComponent<CTransform2D>();
+	emoji->GetComponent<CTransform2D>().SetScale({0.1f, 0.1f});
+	emoji->GetComponent<CTransform2D>().SetRotation(180.0f);
 
-	emoji->AddComponent<CSprite>(m_RenderContext, m_EmojiTexture);
+	emoji->AddComponent<CSprite>(m_RenderParams, m_EmojiTexture);
 }
 
 void Game::Update(float deltaTime) {
-	static auto c{0.0f};
-
 	m_ECS.Refresh();
 	m_ECS.Update(deltaTime);
-
-	auto &transform = emoji->GetComponent<CTransform>();
-	transform.SetTranslation({sinf(c), cosf(c), 0.0f});
-
-	auto &transform2 = bricks->GetComponent<CTransform>();
-
-	m_Camera.SetPosition(transform2.GetTranslation());
-	m_RenderContext.SetView(m_Camera.GetViewMatrix());
-
-	c += 2.0f * deltaTime;
 }
 
 void Game::Render() {
@@ -76,20 +67,17 @@ void Game::Render() {
 
 	m_ECS.Render();
 
-	m_Renderer.RenderText(m_Font, "Hello DirectX!", -0.3f, -0.2f, 0.1f, 
-						  d3d11::Font::Color::ORANGE);
+	std::stringstream ss;
+	ss << "Frame Time: " << std::setprecision(2) << m_Timer.DeltaTime() << std::endl;
+	ss << "Total Time: " << std::setprecision(4) << m_Timer.TotalTime();
+	m_Renderer.RenderText(m_Font, ss.str(), -0.5f, -0.5f, 0.02f, 
+						  d3d11::Font::Color::BLACK);
 	m_Renderer.Flush();
 }
 
 void Game::ProcessMouseButtonEvent(const MouseButtonEvent &event) {
 	UNUSED(event);
 	DEBUG_LOG("The mouse has been pressed.\n");
-
-	std::stringstream ss;
-	ss << "Frame Time: " << m_Timer.DeltaTime() << std::endl;
-	ss << "Total Time: " << m_Timer.TotalTime() << std::endl;
-	DEBUG_LOG(ss.str().c_str());
-	DEBUG_LOG("\n");
 }
 
 void Game::ProcessKeyboardEvent(const KeyboardEvent &event) {
@@ -112,7 +100,7 @@ void Game::ProcessWindowResizeEvent(const WindowResizeEvent &event) {
 	m_Window.SetWidth(event.GetWidth());
 
 	/* This should be managed by the camera class */
-	m_RenderContext.SetProjection(
+	m_RenderParams.SetProjection(
 		DirectX::XMMatrixScaling(m_Window.GetAspectRatio(), 1.0f, 1.0f));
 }
 
@@ -138,8 +126,8 @@ void Game::InitSettings() {
 	m_Renderer.SetClearColor(color::CHERRY);
 	m_Renderer.EnableVSync(true);
 
-	m_RenderContext.SetProjection(m_Camera.GetProjectionMatrix());
-	m_RenderContext.SetView(m_Camera.GetViewMatrix());
+	m_RenderParams.SetProjection(m_Camera.GetProjectionMatrix());
+	m_RenderParams.SetView(m_Camera.GetViewMatrix());
 
 	m_Font = m_Renderer.CreateFont("Arial");
 

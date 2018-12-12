@@ -139,7 +139,8 @@ Font Renderer::CreateFont(const std::string name) {
 
 void Renderer::RenderText(const Font &font, const std::string &text, float x, float y, float width,
 						uint32_t color) const {
-	font.m_Handle->DrawString( m_DeviceContext.Get(), L"Hello DirectX", width * Font::m_ScreenX,
+	std::wstring wtext(text.begin(), text.end());
+	font.m_Handle->DrawString( m_DeviceContext.Get(), wtext.c_str(), width * Font::m_ScreenX,
 		(x + 0.5f) * Font::m_ScreenX, (y + 0.5f) * Font::m_ScreenY, color, FW1_RESTORESTATE );
 }
 

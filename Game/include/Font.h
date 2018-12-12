@@ -9,7 +9,7 @@ class Font {
 	static float m_ScreenX;
 	static float m_ScreenY;
 
-	d3d11::unique_handle<IFW1FontWrapper> m_Handle;
+	unique_handle<IFW1FontWrapper> m_Handle;
 	std::wstring m_Name;
 
   public:
@@ -17,7 +17,14 @@ class Font {
 	static void Init(uint32_t screenX, uint32_t screenY);
 	friend class Renderer;
 
-	enum Color { BLUE = 0xff0000ff, RED = 0xffff0000, GREEN = 0xff00ff00, ORANGE = 0xff5599ff };
+	enum Color { 
+		BLACK = 0xff000000,
+		GRAY = 0xff555555,
+		BLUE = 0xff0000ff,
+		RED = 0xffff0000,
+		GREEN = 0xff00ff00,
+		ORANGE = 0xff5599ff
+	};
 };
 
 }

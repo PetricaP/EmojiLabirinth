@@ -2,37 +2,40 @@
 
 #include "ECS.h"
 #include "Transform.h"
+#include "Transform2D.h"
 #include "InputControl.h"
-#include "Camera.h"
+#include "Camera2D.h"
 #include "Sprite.h"
 
 struct CTransform : public ecs::Component, public xmm::Transform {};
 
-struct CSprite : public ecs::Component, public Sprite {
-	GameRenderContext &m_RenderContext;
-	CTransform *transform;
+struct CTransform2D : public ecs::Component, public xmm::Transform2D {};
 
-	CSprite(GameRenderContext &renderContext, const d3d11::Texture &texture,
-			const math::rect *rect = nullptr) : Sprite(renderContext.m_Renderer, texture, rect),
-			m_RenderContext(renderContext) {}
+struct CSprite : public ecs::Component, public Sprite {
+	RenderParams &m_RenderParams;
+	CTransform2D *transform;
+
+	CSprite(RenderParams &renderParams, const d3d11::Texture &texture,
+			const math::rect *rect = nullptr) : Sprite(renderParams.m_Renderer, texture, rect),
+			m_RenderParams(renderParams) {}
 
 	void Init() override {
-		transform = &entity->GetComponent<CTransform>();
+		transform = &entity->GetComponent<CTransform2D>();
 	}
 
 	void Render() override {
-		m_RenderContext.SetModel(transform->GetModel());
-		m_RenderContext.UpdateShaderBuffer();
-		m_RenderContext.Render(*this);
+		m_RenderParams.SetModel(transform->GetModel());
+		m_RenderParams.UpdateShaderBuffer();
+		m_RenderParams.Render(*this);
 	}
 };
 
 struct CMovementControl : public ecs::Component {
-	CTransform *transform;
-	std::vector<std::pair<DirectX::XMFLOAT3, InputControl*>> controls;
+	CTransform2D *transform;
+	std::vector<std::pair<DirectX::XMFLOAT2, InputControl*>> controls;
 
 	void Init() override {
-		transform = &entity->GetComponent<CTransform>();
+		transform = &entity->GetComponent<CTransform2D>();
 	}
 
 	void Update(float deltaTime) override {
@@ -41,7 +44,7 @@ struct CMovementControl : public ecs::Component {
 			auto input = control.second;
 
 			auto &oldPos = transform->GetTranslation();
-			DirectX::XMFLOAT3 newPos = oldPos + direction * input->GetAmount() * deltaTime;
+			DirectX::XMFLOAT2 newPos = oldPos + direction * input->GetAmount() * deltaTime;
 			transform->SetTranslation(newPos);
 		}
 	}
@@ -49,24 +52,27 @@ struct CMovementControl : public ecs::Component {
 
 /* TODO: Think of the way to make the camera component make sense */
 /* while also managing projection and view correctly */
-struct CCamera : public ecs::Component, private Camera {
-	GameRenderContext &m_RenderContext;
-	CTransform *transform;
+struct CCamera2D : public ecs::Component {
+	RenderParams &m_RenderParams;
+	CTransform2D *transform;
+	DirectX::XMFLOAT2 m_Offset;
+	Camera2D &camera;
 
 	float aspectRatio;
 
-	CCamera(GameRenderContext &renderContext, float aspectRatio = 1.0f)
-		: Camera(aspectRatio), m_RenderContext(renderContext) {}
+	CCamera2D(RenderParams &renderParams, Camera2D &camera, 
+		DirectX::XMFLOAT2 offset = DirectX::XMFLOAT2(0.0f, 0.0f))
+		: camera(camera), m_RenderParams(renderParams), m_Offset(offset) {}
 
 	void Init() override {
-		transform = &entity->GetComponent<CTransform>();
+		transform = &entity->GetComponent<CTransform2D>();
 	}
 
 	void Update(float deltaTime) override {
-		SetPosition(transform->GetTranslation());
-		SetRotation(transform->GetRotation().z);
-		m_RenderContext.SetView(GetViewMatrix());
-		m_RenderContext.UpdateShaderBuffer();
+		camera.SetPosition(transform->GetTranslation() + m_Offset);
+		camera.SetRotation(transform->GetRotation());
+		m_RenderParams.SetView(camera.GetViewMatrix());
+		m_RenderParams.UpdateShaderBuffer();
 	}
 };
 

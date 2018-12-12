@@ -25,6 +25,7 @@ inline ComponentID GetUniqueComponentID() {
 
 } // namespace Internal
 
+// TODO: Maybe inject the ID into the component somehow
 struct Component {
 	Entity *entity;
 
@@ -93,10 +94,15 @@ class Entity {
 		std::unique_ptr<Component> pComponent{component};
 		m_Components.emplace_back(std::move(pComponent));
 
-		m_ComponentArray[GetComponentTypeID<T>()] = component;
-		m_ComponentBitset[GetComponentTypeID<T>()] = true;
+		auto ID = GetComponentTypeID<T>();
+		m_ComponentArray[ID] = component;
+		m_ComponentBitset[ID] = true;
+		std::stringstream ss;
+		ss << "Added component with ID: " << ID << std::endl;
+		DEBUG_LOG(ss.str().c_str());
 
 		component->Init();
+		DEBUG_LOG("Initialized component\n");
 		return *component;
 	}
 
@@ -156,6 +162,7 @@ class Manager {
 		Entity *e(new Entity(*this));
 		std::unique_ptr<Entity> pEntity {e};
 		m_Entities.emplace_back(std::move(pEntity));
+		DEBUG_LOG("Added entity.\n");
 		return *e;
 	}
 };
