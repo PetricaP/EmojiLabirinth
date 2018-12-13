@@ -2,6 +2,7 @@
 
 #include "ECS.h"
 #include "Transform.h"
+#include "AABB2D.h"
 #include "Transform2D.h"
 #include "InputControl.h"
 #include "Camera2D.h"
@@ -50,8 +51,6 @@ struct CMovementControl : public ecs::Component {
 	}
 };
 
-/* TODO: Think of the way to make the camera component make sense */
-/* while also managing projection and view correctly */
 struct CCamera2D : public ecs::Component {
 	RenderParams &m_RenderParams;
 	CTransform2D *transform;
@@ -74,5 +73,16 @@ struct CCamera2D : public ecs::Component {
 		m_RenderParams.SetView(camera.GetViewMatrix());
 		m_RenderParams.UpdateShaderBuffer();
 	}
+};
+
+class CBoxCollider2D : public ecs::Component {
+	AABB2D m_AABB;
+	void Init() override {
+		ASSERT(entity->HasComponent<CTransform2D>());
+	}
+
+	CBoxCollider2D(const DirectX::XMFLOAT2 &minExtents, 
+				   const DirectX::XMFLOAT2 &maxExtents)
+		: m_AABB(minExtents, maxExtents) {}
 };
 

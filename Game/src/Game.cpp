@@ -1,14 +1,16 @@
 #include "Game.h"
 #include "UtilComponents.h"
+#include "AABB2D.h"
 #include <iomanip>
 
 /* Entry point */
-Application *create_application() {
-	return new Game;
+std::unique_ptr<Application> create_application() {
+	return std::make_unique<Game>();
 }
 
 Game::Game() : m_Window(TITLE, INITIAL_WIDTH, INITIAL_HEIGHT),
-	m_Renderer(m_Window), m_RenderParams(m_Renderer), m_Camera(m_Window.GetAspectRatio()) {}
+	m_Renderer(m_Window), m_RenderParams(m_Renderer),
+	m_Camera(m_Window.GetAspectRatio()) {}
 
 int Game::Run() {
 	Init();
@@ -22,38 +24,72 @@ int Game::Run() {
 	return 0;
 }
 
+void TestAABB2D() {
+	AABB2D a1({0.0f, 0.0f}, {1.0f, 1.0f});
+	AABB2D a2({0.5f, 0.5f}, {2.0f, 2.0f});
+	AABB2D a3({1.5f, 0.0f}, {2.0f, 1.0f});
+
+	IntersectionData data1 = a1.IntersectAABB2D(a2);
+	IntersectionData data2 = a2.IntersectAABB2D(a3);
+	IntersectionData data3 = a3.IntersectAABB2D(a1);
+
+	DEBUG_LOG("AABB2D Test:\n");
+	std::stringstream ss;
+	ss << data1.distance << " " << data1.intersects << std::endl;
+	ss << data2.distance << " " << data2.intersects << std::endl;
+	ss << data3.distance << " " << data3.intersects << std::endl;
+	DEBUG_LOG(ss.str().c_str());
+}
+
 void Game::Init() {
 	InitSettings();
+	TestAABB2D();
 
-	m_EmojiTexture = m_Renderer.CreateTexture("bricks.dds");
-	m_BricksTexture = m_Renderer.CreateTexture("emoji.dds");
+	m_EmojiTexture = m_Renderer.CreateTexture("emoji.dds");
+	m_BricksTexture = m_Renderer.CreateTexture("bricks.dds");
 
-	bricks = &m_ECS.AddEntity();
+	ecs::Entity *emoji = &m_ECS.AddEntity();
+
+	emoji->AddComponent<CTransform2D>();
+	emoji->GetComponent<CTransform2D>().SetTranslation({0.0f, -0.3f});
+	emoji->GetComponent<CTransform2D>().SetScale({0.1f, 0.1f});
+
+	emoji->AddComponent<CSprite>(m_RenderParams, m_EmojiTexture);
+
+	emoji->AddComponent<CMovementControl>();
+
+	emoji->GetComponent<CMovementControl>().controls.push_back(
+		std::make_pair(DirectX::XMFLOAT2{1, 0}, &m_Horizontal));
+
+	emoji->GetComponent<CMovementControl>().controls.push_back(
+		std::make_pair(DirectX::XMFLOAT2{0, 1}, &m_Vertical));
+
+	emoji->AddComponent<CCamera2D>(m_RenderParams, m_Camera,
+								  DirectX::XMFLOAT2{0.0f, 0.5f});
+
+	ecs::Entity *bricks = &m_ECS.AddEntity();
 
 	bricks->AddComponent<CTransform2D>();
-	bricks->GetComponent<CTransform2D>().SetTranslation({0.0f, -0.3f});
 	bricks->GetComponent<CTransform2D>().SetScale({0.1f, 0.1f});
+	bricks->GetComponent<CTransform2D>().SetTranslation({-0.7f, 0.3f});
 
 	bricks->AddComponent<CSprite>(m_RenderParams, m_BricksTexture);
 
-	bricks->AddComponent<CMovementControl>();
+	ecs::Entity *wall1 = &m_ECS.AddEntity();
 
-	bricks->GetComponent<CMovementControl>().controls.push_back(
-		std::make_pair(DirectX::XMFLOAT2{1, 0}, &m_Horizontal));
+	wall1->AddComponent<CTransform2D>();
+	wall1->GetComponent<CTransform2D>().SetScale({0.6f, 0.02f});
+	wall1->GetComponent<CTransform2D>().SetTranslation({0.3f, 0.5f});
 
-	bricks->GetComponent<CMovementControl>().controls.push_back(
-		std::make_pair(DirectX::XMFLOAT2{0, 1}, &m_Vertical));
+	wall1->AddComponent<CSprite>(m_RenderParams, m_BricksTexture);
 
-	bricks->AddComponent<CCamera2D>(m_RenderParams, m_Camera,
-								  DirectX::XMFLOAT2{0.0f, 0.5f});
+	ecs::Entity *wall2 = &m_ECS.AddEntity();
 
-	emoji = &m_ECS.AddEntity();
+	wall2->AddComponent<CTransform2D>();
+	wall2->GetComponent<CTransform2D>().SetScale({0.04f, 0.5f});
+	wall2->GetComponent<CTransform2D>().SetTranslation({-0.8f, -0.5f});
 
-	emoji->AddComponent<CTransform2D>();
-	emoji->GetComponent<CTransform2D>().SetScale({0.1f, 0.1f});
-	emoji->GetComponent<CTransform2D>().SetTranslation({0.3f, 0.5f});
-
-	emoji->AddComponent<CSprite>(m_RenderParams, m_EmojiTexture);
+	wall2->AddComponent<CSprite>(m_RenderParams, m_BricksTexture);
 }
 
 void Game::Update(float deltaTime) {
@@ -69,7 +105,7 @@ void Game::Render() {
 	std::stringstream ss;
 	ss << "Frame Time: " << std::setprecision(2) << m_Timer.DeltaTime() << std::endl;
 	ss << "Total Time: " << std::setprecision(4) << m_Timer.TotalTime();
-	m_Renderer.RenderText(m_Font, ss.str(), -0.5f, -0.5f, 0.02f, 
+	m_Renderer.RenderText(m_Font, ss.str(), -0.45f, -0.45f, 0.02f, 
 						  d3d11::Font::Color::BLACK);
 	m_Renderer.Flush();
 }

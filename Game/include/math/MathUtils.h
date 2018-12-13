@@ -43,6 +43,13 @@ inline T max(T first, T second) {
 	return ((first > second) ? first : second);
 }
 
+#undef min
+
+template <typename T>
+inline T min(T first, T second) {
+	return ((first < second) ? first : second);
+}
+
 template <typename T>
 struct rect_t {
 	T x, y;

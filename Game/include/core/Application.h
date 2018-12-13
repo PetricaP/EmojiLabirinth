@@ -7,4 +7,4 @@ struct Application : public EventListener {
 	virtual ~Application() = default;
 };
 
-Application *create_application();
+std::unique_ptr<Application> create_application();

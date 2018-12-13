@@ -33,9 +33,6 @@ class Game : public Application {
 	InputControl m_Vertical;
 
 	ecs::Manager m_ECS;
-	ecs::Entity *bricks;
-	ecs::Entity *emoji;
-
   public:
 	Game();
 	int Run() override;

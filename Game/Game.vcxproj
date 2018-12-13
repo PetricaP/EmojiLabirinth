@@ -80,12 +80,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin\build\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)lib\DDSTextureLoader;$(ProjectDir)\lib\FW1FontWrapper;$(ProjectDir)\include</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)lib\DDSTextureLoader;$(ProjectDir)\lib\FW1FontWrapper;$(ProjectDir)\include;$(ProjectDir)\include\graphics;$(ProjectDir)\include\math;$(ProjectDir)\include\core</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)bin\build\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)lib\DDSTextureLoader;$(ProjectDir)\lib\FW1FontWrapper;$(ProjectDir)\include</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)lib\DDSTextureLoader;$(ProjectDir)\lib\FW1FontWrapper;$(ProjectDir)\include;$(ProjectDir)\include\graphics;$(ProjectDir)\include\math;$(ProjectDir)\include\core</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -167,56 +167,59 @@
     <ClCompile Include="lib\FW1FontWrapper\CFW1TextRendererInterface.cpp" />
     <ClCompile Include="lib\FW1FontWrapper\FW1FontWrapper.cpp" />
     <ClCompile Include="lib\FW1FontWrapper\FW1Precompiled.cpp" />
-    <ClCompile Include="src\Camera2D.cpp" />
-    <ClCompile Include="src\Drawable.cpp" />
-    <ClCompile Include="src\EventListener.cpp" />
-    <ClCompile Include="src\Font.cpp" />
+    <ClCompile Include="src\math\AABB2D.cpp" />
+    <ClCompile Include="src\core\Camera2D.cpp" />
+    <ClCompile Include="src\graphics\Drawable.cpp" />
+    <ClCompile Include="src\core\EventListener.cpp" />
+    <ClCompile Include="src\graphics\Font.cpp" />
     <ClCompile Include="src\Game.cpp" />
-    <ClCompile Include="src\GameEventHandler.cpp" />
-    <ClCompile Include="src\Main.cpp" />
-    <ClCompile Include="src\Renderer.cpp" />
-    <ClCompile Include="src\ShaderProgram.cpp" />
-    <ClCompile Include="src\SimpleShader.cpp" />
-    <ClCompile Include="src\Sprite.cpp" />
-    <ClCompile Include="src\Texture.cpp" />
-    <ClCompile Include="src\Timer.cpp" />
-    <ClCompile Include="src\VertexBuffer.cpp" />
-    <ClCompile Include="src\Window.cpp" />
-    <ClCompile Include="src\WindowWIN32.cpp" />
+    <ClCompile Include="src\core\GameEventHandler.cpp" />
+    <ClCompile Include="src\core\Main.cpp" />
+    <ClCompile Include="src\graphics\Renderer.cpp" />
+    <ClCompile Include="src\graphics\ShaderProgram.cpp" />
+    <ClCompile Include="src\graphics\SimpleShader.cpp" />
+    <ClCompile Include="src\core\Sprite.cpp" />
+    <ClCompile Include="src\graphics\Texture.cpp" />
+    <ClCompile Include="src\core\Timer.cpp" />
+    <ClCompile Include="src\graphics\VertexBuffer.cpp" />
+    <ClCompile Include="src\core\Window.cpp" />
+    <ClCompile Include="src\core\WindowWIN32.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\Application.h" />
-    <ClInclude Include="include\Camera2D.h" />
-    <ClInclude Include="include\ConstantBuffer.h" />
-    <ClInclude Include="include\Drawable.h" />
-    <ClInclude Include="include\ECS.h" />
-    <ClInclude Include="include\Event.h" />
-    <ClInclude Include="include\EventHandler.h" />
-    <ClInclude Include="include\EventListener.h" />
-    <ClInclude Include="include\FileUtils.h" />
-    <ClInclude Include="include\Font.h" />
+    <ClInclude Include="include\math\AABB2D.h" />
+    <ClInclude Include="include\core\Application.h" />
+    <ClInclude Include="include\core\Camera2D.h" />
+    <ClInclude Include="include\graphics\ConstantBuffer.h" />
+    <ClInclude Include="include\graphics\Drawable.h" />
+    <ClInclude Include="include\core\ECS.h" />
+    <ClInclude Include="include\core\Event.h" />
+    <ClInclude Include="include\core\EventHandler.h" />
+    <ClInclude Include="include\core\EventListener.h" />
+    <ClInclude Include="include\graphics\FileUtils.h" />
+    <ClInclude Include="include\graphics\Font.h" />
     <ClInclude Include="include\Game.h" />
-    <ClInclude Include="include\GameEventHandler.h" />
-    <ClInclude Include="include\IndexBuffer.h" />
-    <ClInclude Include="include\InputControl.h" />
-    <ClInclude Include="include\InputLayout.h" />
-    <ClInclude Include="include\MathUtils.h" />
-    <ClInclude Include="include\Model.h" />
-    <ClInclude Include="include\RenderParams.h" />
-    <ClInclude Include="include\Renderer.h" />
-    <ClInclude Include="include\Shader.h" />
-    <ClInclude Include="include\ShaderProgram.h" />
-    <ClInclude Include="include\SimpleShader.h" />
-    <ClInclude Include="include\Sprite.h" />
-    <ClInclude Include="include\Texture.h" />
-    <ClInclude Include="include\Timer.h" />
-    <ClInclude Include="include\Transform.h" />
-    <ClInclude Include="include\Transform2D.h" />
-    <ClInclude Include="include\UtilComponents.h" />
-    <ClInclude Include="include\Utility.h" />
-    <ClInclude Include="include\VertexBuffer.h" />
-    <ClInclude Include="include\Window.h" />
-    <ClInclude Include="include\WindowWIN32.h" />
+    <ClInclude Include="include\core\GameEventHandler.h" />
+    <ClInclude Include="include\graphics\IndexBuffer.h" />
+    <ClInclude Include="include\core\InputControl.h" />
+    <ClInclude Include="include\graphics\InputLayout.h" />
+    <ClInclude Include="include\core\IntersectionData.h" />
+    <ClInclude Include="include\math\MathUtils.h" />
+    <ClInclude Include="include\graphics\Model.h" />
+    <ClInclude Include="include\core\RenderParams.h" />
+    <ClInclude Include="include\graphics\Renderer.h" />
+    <ClInclude Include="include\graphics\Shader.h" />
+    <ClInclude Include="include\graphics\ShaderProgram.h" />
+    <ClInclude Include="include\graphics\SimpleShader.h" />
+    <ClInclude Include="include\core\Sprite.h" />
+    <ClInclude Include="include\graphics\Texture.h" />
+    <ClInclude Include="include\core\Timer.h" />
+    <ClInclude Include="include\core\Transform.h" />
+    <ClInclude Include="include\core\Transform2D.h" />
+    <ClInclude Include="include\core\UtilComponents.h" />
+    <ClInclude Include="include\core\Utility.h" />
+    <ClInclude Include="include\graphics\VertexBuffer.h" />
+    <ClInclude Include="include\core\Window.h" />
+    <ClInclude Include="include\core\WindowWIN32.h" />
     <ClInclude Include="lib\DDSTextureLoader\DDSTextureLoader.h" />
     <ClInclude Include="lib\FW1FontWrapper\CFW1ColorRGBA.h" />
     <ClInclude Include="lib\FW1FontWrapper\CFW1DWriteRenderTarget.h" />

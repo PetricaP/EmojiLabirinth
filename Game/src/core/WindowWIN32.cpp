@@ -6,24 +6,24 @@ namespace win32 {
 
 static std::unordered_map<HWND, Window *> _Windows;
 
-Event *create_event(UINT msg, LPARAM lParam, WPARAM wParam) {
-	Event *e = nullptr;
+std::unique_ptr<Event> create_event(UINT msg, LPARAM lParam, WPARAM wParam) {
+	std::unique_ptr<Event> e = nullptr;
 	SYSTEMTIME time;
 	GetSystemTime(&time);
 	switch(msg) {
 		case WM_LBUTTONDOWN:
-			e = new MouseButtonEvent(time.wMilliseconds, 
+			e = std::make_unique<MouseButtonEvent>(time.wMilliseconds, 
 				0, MouseButtonEvent::Button::LEFT, true, 1,
 				GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 			break;
 		case WM_KEYDOWN:
-			e = new KeyboardEvent(time.wMilliseconds, 0, true, 1, static_cast<KeyboardEvent::Key>(wParam));
+			e = std::make_unique<KeyboardEvent>(time.wMilliseconds, 0, true, 1, static_cast<KeyboardEvent::Key>(wParam));
 			break;
 		case WM_KEYUP:
-			e = new KeyboardEvent(time.wMilliseconds, 0, false, 1, static_cast<KeyboardEvent::Key>(wParam));
+			e = std::make_unique<KeyboardEvent>(time.wMilliseconds, 0, false, 1, static_cast<KeyboardEvent::Key>(wParam));
 			break;
 		case WM_SIZE:
-			e = new WindowResizeEvent(time.wMilliseconds, 0, LOWORD(lParam), HIWORD(lParam));
+			e = std::make_unique<WindowResizeEvent>(time.wMilliseconds, 0, LOWORD(lParam), HIWORD(lParam));
 			break;
 		default:
 			break;
@@ -42,9 +42,9 @@ static LRESULT CALLBACK wnd_proc(HWND hWnd, UINT msg, WPARAM wParam,
 		break;
 	}
 
-	Event *e = create_event(msg, lParam, wParam);
+	auto e = create_event(msg, lParam, wParam);
 	if (e) {
-		_Windows[hWnd]->UpdateListeners(e);
+		_Windows[hWnd]->UpdateListeners(e.get());
 	}
 
 	return DefWindowProc(hWnd, msg, wParam, lParam);
