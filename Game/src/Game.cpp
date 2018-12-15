@@ -3,6 +3,8 @@
 #include "AABB2D.h"
 #include <iomanip>
 
+constexpr ecs::Group GROUP_WALL = 0;
+
 /* Entry point */
 std::unique_ptr<Application> create_application() {
 	return std::make_unique<Game>();
@@ -10,7 +12,7 @@ std::unique_ptr<Application> create_application() {
 
 Game::Game() : m_Window(TITLE, INITIAL_WIDTH, INITIAL_HEIGHT),
 	m_Renderer(m_Window), m_RenderParams(m_Renderer),
-	m_Camera(m_Window.GetAspectRatio()) {}
+	m_Camera(m_Window.GetAspectRatio()), m_InteractionSystem(m_ECS) {}
 
 int Game::Run() {
 	Init();
@@ -24,26 +26,8 @@ int Game::Run() {
 	return 0;
 }
 
-void TestAABB2D() {
-	AABB2D a1({0.0f, 0.0f}, {1.0f, 1.0f});
-	AABB2D a2({0.5f, 0.5f}, {2.0f, 2.0f});
-	AABB2D a3({1.5f, 0.0f}, {2.0f, 1.0f});
-
-	IntersectionData data1 = a1.IntersectAABB2D(a2);
-	IntersectionData data2 = a2.IntersectAABB2D(a3);
-	IntersectionData data3 = a3.IntersectAABB2D(a1);
-
-	DEBUG_LOG("AABB2D Test:\n");
-	std::stringstream ss;
-	ss << data1.distance << " " << data1.intersects << std::endl;
-	ss << data2.distance << " " << data2.intersects << std::endl;
-	ss << data3.distance << " " << data3.intersects << std::endl;
-	DEBUG_LOG(ss.str().c_str());
-}
-
 void Game::Init() {
 	InitSettings();
-	TestAABB2D();
 
 	m_EmojiTexture = m_Renderer.CreateTexture("emoji.dds");
 	m_BricksTexture = m_Renderer.CreateTexture("bricks.dds");
@@ -54,24 +38,52 @@ void Game::Init() {
 	emoji->GetComponent<CTransform2D>().SetTranslation({0.0f, -0.3f});
 	emoji->GetComponent<CTransform2D>().SetScale({0.1f, 0.1f});
 
+	emoji->AddComponent<CBoxCollider2D>(
+		xm::vec2f{-0.1f, -0.1f},
+		xm::vec2f{ 0.1f,  0.1f},
+		[emoji] (const CBoxCollider2D &other, const IntersectionData &data){
+			// WTF
+			/*
+			if (other.entity->HasGroup(GROUP_WALL)) {
+				auto &velocity = emoji->GetComponent<CMotionComponent2D>().GetVelocity();
+				xm::vec2f newVelocity = velocity * -1.5f;
+				auto &transform = emoji->GetComponent<CTransform2D>();
+				xm::vec2f newTranslation = transform.GetTranslation() - abs(data.distance);
+				transform.SetTranslation(newTranslation);
+				emoji->GetComponent<CMotionComponent2D>().SetVelocity(newVelocity);
+				emoji->GetComponent<CMotionComponent2D>().SetAcceleration(
+					{0.0f, 0.0f});
+			}
+			*/
+		}
+	);
+
 	emoji->AddComponent<CSprite>(m_RenderParams, m_EmojiTexture);
+
+	emoji->AddComponent<CMotionComponent2D>();
 
 	emoji->AddComponent<CMovementControl>();
 
 	emoji->GetComponent<CMovementControl>().controls.push_back(
-		std::make_pair(DirectX::XMFLOAT2{1, 0}, &m_Horizontal));
+		{xm::vec2f{5.0f, 0}, &m_Horizontal});
 
 	emoji->GetComponent<CMovementControl>().controls.push_back(
-		std::make_pair(DirectX::XMFLOAT2{0, 1}, &m_Vertical));
+		{xm::vec2f{0, 5.0f}, &m_Vertical});
 
 	emoji->AddComponent<CCamera2D>(m_RenderParams, m_Camera,
-								  DirectX::XMFLOAT2{0.0f, 0.5f});
+								  xm::vec2f{0.0f, 0.5f});
 
 	ecs::Entity *bricks = &m_ECS.AddEntity();
 
 	bricks->AddComponent<CTransform2D>();
 	bricks->GetComponent<CTransform2D>().SetScale({0.1f, 0.1f});
 	bricks->GetComponent<CTransform2D>().SetTranslation({-0.7f, 0.3f});
+	bricks->AddGroup(GROUP_WALL);
+
+	bricks->AddComponent<CBoxCollider2D>(
+		xm::vec2f{-0.1f, -0.1f},
+		xm::vec2f{0.1f, 0.1f});
+
 
 	bricks->AddComponent<CSprite>(m_RenderParams, m_BricksTexture);
 
@@ -90,10 +102,30 @@ void Game::Init() {
 	wall2->GetComponent<CTransform2D>().SetTranslation({-0.8f, -0.5f});
 
 	wall2->AddComponent<CSprite>(m_RenderParams, m_BricksTexture);
+
+	const float af = 1.0f;
+	const float vf = 4.0f;
+
+
+	ecs::Entity *tmp = nullptr;
+	
+	for(int i = 0; i < 1000; ++i) {
+		tmp = &m_ECS.AddEntity();
+
+		tmp->AddComponent<CTransform2D>();
+		tmp->GetComponent<CTransform2D>().SetScale({0.01f, 0.01f});
+		tmp->GetComponent<CTransform2D>().SetTranslation({0.0f, 0.0f});
+
+		tmp->AddComponent<CSprite>(m_RenderParams, m_BricksTexture);
+
+		xm::vec2f acceleration{math::randf(-af, af), math::randf(-af, af)};
+		tmp->AddComponent<CMotionComponent2D>(-vf * acceleration, acceleration);
+	}
 }
 
 void Game::Update(float deltaTime) {
 	m_ECS.Refresh();
+	m_InteractionSystem.Update();
 	m_ECS.Update(deltaTime);
 }
 
@@ -105,7 +137,7 @@ void Game::Render() {
 	std::stringstream ss;
 	ss << "Frame Time: " << std::setprecision(2) << m_Timer.DeltaTime() << std::endl;
 	ss << "Total Time: " << std::setprecision(4) << m_Timer.TotalTime();
-	m_Renderer.RenderText(m_Font, ss.str(), -0.45f, -0.45f, 0.02f, 
+	m_Renderer.RenderText(m_Font, ss.str(), -0.48f, -0.48f, 0.02f, 
 						  d3d11::Font::Color::BLACK);
 	m_Renderer.Flush();
 }
@@ -116,6 +148,7 @@ void Game::ProcessMouseButtonEvent(const MouseButtonEvent &event) {
 }
 
 void Game::ProcessKeyboardEvent(const KeyboardEvent &event) {
+	// Ignore repeat for now
 	if(event.GetPressed() == true) {
 		m_EventHandler.OnKeyDown(event.GetKey(), 0);
 	} else {
@@ -155,6 +188,7 @@ void Game::OnEvent(const Event &event) {
 }
 
 void Game::InitSettings() {
+	srand(time(nullptr));
 	d3d11::Font::Init(m_Window.GetWidth(), m_Window.GetHeight());
 	m_Window.AddEventListener(this);
 
@@ -166,6 +200,10 @@ void Game::InitSettings() {
 
 	m_Font = m_Renderer.CreateFont("Arial");
 
+	m_EventHandler.AddKeyControl(KeyboardEvent::Key::D, m_Horizontal, 1.0f);
+	m_EventHandler.AddKeyControl(KeyboardEvent::Key::A, m_Horizontal, -1.0f);
+	m_EventHandler.AddKeyControl(KeyboardEvent::Key::W, m_Vertical, 1.0f);
+	m_EventHandler.AddKeyControl(KeyboardEvent::Key::S, m_Vertical, -1.0f);
 	m_EventHandler.AddKeyControl(KeyboardEvent::Key::RIGHT, m_Horizontal, 1.0f);
 	m_EventHandler.AddKeyControl(KeyboardEvent::Key::LEFT, m_Horizontal, -1.0f);
 	m_EventHandler.AddKeyControl(KeyboardEvent::Key::UP, m_Vertical, 1.0f);

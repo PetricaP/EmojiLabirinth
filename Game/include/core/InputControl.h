@@ -11,6 +11,6 @@ class InputControl {
 
 	void AddAmount(float amountToAdd) { amount = math::clamp(amount + amountToAdd, -1.0f, 1.0f); }
 
-	float GetAmount() const { return amount; }
+	float GetAmount() const { return  math::clamp(amount, -1.0f, 1.0f); }
 };
 

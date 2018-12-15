@@ -1,7 +1,8 @@
 #pragma once
 
-#include <cmath>
 #include <DirectXMath.h>
+#include <cmath>
+#include <cstdlib>
 
 namespace math {
 
@@ -58,6 +59,10 @@ struct rect_t {
 
 using rect = rect_t<float>;
 
+inline float randf(float min, float max) {
+	return min + (rand() % RAND_MAX) * (max - min) / RAND_MAX;
+}
+
 } // namespace math
 
 namespace DirectX {
@@ -102,6 +107,14 @@ inline XMFLOAT2 operator+(float s, const XMFLOAT2 &v1) {
 	return {v1.x + s, v1.y + s};
 }
 
+inline XMFLOAT2 operator-(const XMFLOAT2 &v1, float s) {
+	return {v1.x - s, v1.y - s};
+}
+
+inline XMFLOAT2 operator-(float s, const XMFLOAT2 &v1) {
+	return {v1.x - s, v1.y - s};
+}
+
 inline XMFLOAT2 operator*(const XMFLOAT2 &v1, float s) {
 	return {v1.x * s, v1.y * s};
 }
@@ -110,5 +123,9 @@ inline XMFLOAT2 operator*(float s, const XMFLOAT2 &v1) {
 	return {v1.x * s, v1.y * s};
 }
 
-}
+} // namespace DirectX
 
+namespace xm {
+using vec2f = DirectX::XMFLOAT2;
+using vec3f = DirectX::XMFLOAT3;
+} // namespace xm

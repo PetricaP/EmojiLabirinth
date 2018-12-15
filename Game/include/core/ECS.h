@@ -1,17 +1,17 @@
 #pragma once
 
-#include <vector>
-#include <memory>
+#include "Utility.h"
 #include <array>
 #include <bitset>
-#include "Utility.h"
+#include <memory>
+#include <vector>
 
 namespace ecs {
 
 class Entity;
 
-constexpr std::size_t MAX_COMPONENTS {32ul};
-constexpr std::size_t MAX_GROUPS {32ul};
+constexpr std::size_t MAX_COMPONENTS{32ul};
+constexpr std::size_t MAX_GROUPS{32ul};
 
 using ComponentID = std::size_t;
 using Group = std::size_t;
@@ -29,16 +29,21 @@ inline ComponentID GetUniqueComponentID() {
 struct Component {
 	Entity *entity;
 
-	virtual void Init() {}
-	virtual void Update(float deltaTime) {}
-	virtual void Render() {}
+	virtual void Init() {
+	}
+	virtual void Update(float deltaTime) {
+	}
+	virtual void Render() {
+	}
 
-	virtual ~Component() {}
+	virtual ~Component() {
+	}
 };
 
 template <typename T>
 inline ComponentID GetComponentTypeID() {
-	static_assert(std::is_base_of<Component, T>::value, "T must inherit from component");
+	static_assert(std::is_base_of<Component, T>::value,
+				  "T must inherit from component");
 
 	static ComponentID typeID{Internal::GetUniqueComponentID()};
 	return typeID;
@@ -52,26 +57,34 @@ class Entity {
 	std::array<Component *, MAX_COMPONENTS> m_ComponentArray;
 	std::bitset<MAX_COMPONENTS> m_ComponentBitset;
 	std::bitset<MAX_GROUPS> m_GroupBitset;
-	bool m_IsAlive {true};
+	bool m_IsAlive{true};
 
   public:
-	Entity(Manager &manager) : m_Manager(manager) {}
+	Entity(Manager &manager) : m_Manager(manager) {
+	}
 
 	void Update(float deltaTime) {
-		for(auto &c : m_Components) {
+		for (auto &c : m_Components) {
 			c->Update(deltaTime);
 		}
 	}
 
 	void Render() {
-		for(auto &c : m_Components) {
+		for (auto &c : m_Components) {
 			c->Render();
 		}
 	}
 
-	bool IsAlive() { return m_IsAlive; }
+	bool IsAlive() {
+		return m_IsAlive;
+	}
 
-	void Destroy() { m_IsAlive = false; }
+	void Destroy() {
+		m_IsAlive = false;
+	}
+
+	template <typename T, typename... TArgs>
+	T &AddComponent(TArgs &&... args);
 
 	template <typename T>
 	bool HasComponent() const {
@@ -83,27 +96,8 @@ class Entity {
 	}
 
 	void AddGroup(Group group);
-	void RemoveGroup(Group group) { m_GroupBitset[group] = false; }
-
-	template <typename T, typename... TArgs>
-	T &AddComponent(TArgs&&... args) {
-		ASSERT(!HasComponent<T>());
-
-		T *component{new T(std::forward<TArgs>(args)...)};
-		component->entity = this;
-		std::unique_ptr<Component> pComponent{component};
-		m_Components.emplace_back(std::move(pComponent));
-
-		auto ID = GetComponentTypeID<T>();
-		m_ComponentArray[ID] = component;
-		m_ComponentBitset[ID] = true;
-		std::stringstream ss;
-		ss << "Added component with ID: " << ID << std::endl;
-		DEBUG_LOG(ss.str().c_str());
-
-		component->Init();
-		DEBUG_LOG("Initialized component\n");
-		return *component;
+	void RemoveGroup(Group group) {
+		m_GroupBitset[group] = false;
 	}
 
 	template <typename T>
@@ -114,20 +108,28 @@ class Entity {
 	}
 };
 
+struct Listener {
+	virtual void OnAddComponent(Component *component) {}
+	virtual void OnAddEntity(Entity *entity) {}
+	virtual void OnRemoveEntity() {}
+	virtual ~Listener() {}
+};
+
 class Manager {
   private:
 	std::vector<std::unique_ptr<Entity>> m_Entities;
 	std::array<std::vector<Entity *>, MAX_GROUPS> m_Groups;
+	std::vector<Listener *> m_Listeners;
 
   public:
 	void Update(float deltaTime) {
-		for(auto &e : m_Entities) {
+		for (auto &e : m_Entities) {
 			e->Update(deltaTime);
 		}
 	}
 
 	void Render() {
-		for(auto &e : m_Entities) {
+		for (auto &e : m_Entities) {
 			e->Render();
 		}
 	}
@@ -136,34 +138,50 @@ class Manager {
 		m_Groups[group].emplace_back(entity);
 	}
 
+	void AddListener(Listener *listener) {
+		m_Listeners.push_back(listener);
+	}
+
 	std::vector<Entity *> &GetEntitiesByGroup(Group group) {
 		return m_Groups[group];
 	}
 
 	void Refresh() {
-		for(auto i(0u); i < MAX_GROUPS; ++i) {
+		for (auto i(0u); i < MAX_GROUPS; ++i) {
 			auto &entities(m_Groups[i]);
 
-			entities.erase(std::remove_if(std::begin(entities), std::end(entities),
-				[i](Entity *entity) {
-					return !entity->IsAlive() || !entity->HasGroup(i);
-				}
-			), std::end(entities));
+			entities.erase(std::remove_if(std::begin(entities),
+										  std::end(entities),
+										  [i](Entity *entity) {
+											  return !entity->IsAlive() ||
+													 !entity->HasGroup(i);
+										  }),
+						   std::end(entities));
 		}
 
-		m_Entities.erase(std::remove_if(std::begin(m_Entities), std::end(m_Entities),
-			[](const std::unique_ptr<Entity> &entity) {
-				return !entity->IsAlive();
-			}
-		), std::end(m_Entities));
+		m_Entities.erase(
+			std::remove_if(std::begin(m_Entities), std::end(m_Entities),
+						   [](const std::unique_ptr<Entity> &entity) {
+							   return !entity->IsAlive();
+						   }),
+			std::end(m_Entities));
 	}
 
 	Entity &AddEntity() {
 		Entity *e(new Entity(*this));
-		std::unique_ptr<Entity> pEntity {e};
+		std::unique_ptr<Entity> pEntity{e};
 		m_Entities.emplace_back(std::move(pEntity));
+		for(auto &listener : m_Listeners) {
+			listener->OnAddEntity(e);
+		}
 		DEBUG_LOG("Added entity.\n");
 		return *e;
+	}
+
+	void OnAddComponent(Component *comp) {
+		for(auto &listener : m_Listeners) {
+			listener->OnAddComponent(comp);
+		}
 	}
 };
 
@@ -172,4 +190,28 @@ void Entity::AddGroup(Group group) {
 	m_Manager.AddToGroup(this, group);
 }
 
+template <typename T, typename... TArgs>
+T &Entity::AddComponent(TArgs &&... args) {
+	ASSERT(!HasComponent<T>());
+
+	T *component{new T(std::forward<TArgs>(args)...)};
+	component->entity = this;
+	std::unique_ptr<Component> pComponent{component};
+	m_Components.emplace_back(std::move(pComponent));
+
+	auto ID = GetComponentTypeID<T>();
+	m_ComponentArray[ID] = component;
+	m_ComponentBitset[ID] = true;
+	std::stringstream ss;
+	ss << "Added component with ID: " << ID << std::endl;
+	DEBUG_LOG(ss.str().c_str());
+
+	component->Init();
+	DEBUG_LOG("Initialized component\n");
+	m_Manager.OnAddComponent(component);
+	return *component;
+}
+
+
 } // namespace ecs
+

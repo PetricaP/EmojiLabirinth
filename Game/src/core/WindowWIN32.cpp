@@ -1,26 +1,47 @@
 #include "WindowWIN32.h"
 #include <Windowsx.h>
 #include <unordered_map>
+#include <bitset>
 
 namespace win32 {
 
 static std::unordered_map<HWND, Window *> _Windows;
 
 std::unique_ptr<Event> create_event(UINT msg, LPARAM lParam, WPARAM wParam) {
+	// HACK
+	static std::bitset<200> enabled{0};
+
 	std::unique_ptr<Event> e = nullptr;
 	SYSTEMTIME time;
 	GetSystemTime(&time);
+	uint32_t repeat = lParam & 0xFFFF;
+	std::stringstream ss;
 	switch(msg) {
 		case WM_LBUTTONDOWN:
 			e = std::make_unique<MouseButtonEvent>(time.wMilliseconds, 
 				0, MouseButtonEvent::Button::LEFT, true, 1,
 				GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 			break;
+		case WM_RBUTTONDOWN:
+			e = std::make_unique<MouseButtonEvent>(time.wMilliseconds, 
+				0, MouseButtonEvent::Button::RIGHT, true, 1,
+				GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			break;
+		case WM_MBUTTONDOWN:
+			e = std::make_unique<MouseButtonEvent>(time.wMilliseconds, 
+				0, MouseButtonEvent::Button::MIDDLE, true, 1,
+				GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			break;
 		case WM_KEYDOWN:
-			e = std::make_unique<KeyboardEvent>(time.wMilliseconds, 0, true, 1, static_cast<KeyboardEvent::Key>(wParam));
+			if(!enabled[wParam]) {
+				e = std::make_unique<KeyboardEvent>(time.wMilliseconds, 0,
+					true, repeat, static_cast<KeyboardEvent::Key>(wParam));
+				enabled[wParam] = 1;
+			}
 			break;
 		case WM_KEYUP:
-			e = std::make_unique<KeyboardEvent>(time.wMilliseconds, 0, false, 1, static_cast<KeyboardEvent::Key>(wParam));
+			e = std::make_unique<KeyboardEvent>(time.wMilliseconds, 0, false, repeat, static_cast<KeyboardEvent::Key>(wParam));
+			enabled[wParam] = 0;
 			break;
 		case WM_SIZE:
 			e = std::make_unique<WindowResizeEvent>(time.wMilliseconds, 0, LOWORD(lParam), HIWORD(lParam));
@@ -81,6 +102,10 @@ Window::Window(const std::string title, uint32_t width, uint32_t height)
 
 	ShowWindow(m_Window, DEFAULT_SHOW);
 	UpdateWindow(m_Window);
+
+	std::stringstream ss;
+	ss << "Created window (" << m_Width << ", " << m_Height << ")\n";
+	DEBUG_LOG(ss.str().c_str());
 }
 
 void Window::PollEvents() {

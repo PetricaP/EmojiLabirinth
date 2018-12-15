@@ -4,15 +4,15 @@
 #include "Timer.h"
 #include "WindowWIN32.h"
 #include "GameEventHandler.h"
-#include "ECS.h"
 #include "Camera2D.h"
 #include "RenderParams.h"
+#include "InteractionSystem.h"
 #include <memory>
 
 class Game : public Application {
   private:
-	static constexpr uint32_t INITIAL_WIDTH{800u};
-	static constexpr uint32_t INITIAL_HEIGHT{600u};
+	static constexpr uint32_t INITIAL_WIDTH{1280u};
+	static constexpr uint32_t INITIAL_HEIGHT{720u};
 	static constexpr const char *TITLE{"Hello DirectX!"};
 
 	win32::Window m_Window;
@@ -33,6 +33,8 @@ class Game : public Application {
 	InputControl m_Vertical;
 
 	ecs::Manager m_ECS;
+
+	InteractionSystem m_InteractionSystem;
   public:
 	Game();
 	int Run() override;

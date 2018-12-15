@@ -1,17 +1,17 @@
 #pragma once
 
-#include <DirectXMath.h>
+#include "MathUtils.h"
 
-namespace xmm {
+namespace xm {
 
 struct Transform {
-	DirectX::XMFLOAT3 m_Translation;
-	DirectX::XMFLOAT3 m_Scale;
-	DirectX::XMFLOAT3 m_Rotation;
+	vec3f m_Translation;
+	vec3f m_Scale;
+	vec3f m_Rotation;
 
-	Transform(const DirectX::XMFLOAT3 &position = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f), 
-			  const DirectX::XMFLOAT3 &scale = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f),
-			  const DirectX::XMFLOAT3 &rotation = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f))
+	Transform(const vec3f &position = vec3f(0.0f, 0.0f, 0.0f), 
+			  const vec3f &scale = vec3f(1.0f, 1.0f, 1.0f),
+			  const vec3f &rotation = vec3f(0.0f, 0.0f, 0.0f))
 		: m_Translation(position), m_Scale(scale), m_Rotation(rotation) {}
 
 	DirectX::XMMATRIX GetModel() const {
@@ -23,12 +23,12 @@ struct Transform {
 			* DirectX::XMMatrixTranslation(m_Translation.x, m_Translation.y, m_Translation.z));
 	}
 
-	void SetTranslation(const DirectX::XMFLOAT3 &translation) { m_Translation = translation; }
-	const DirectX::XMFLOAT3 &GetTranslation() const { return m_Translation; }
-	void SetScale(const DirectX::XMFLOAT3 &scale) { m_Scale = scale; }
-	const DirectX::XMFLOAT3 &GetScale() const { return m_Scale; }
-	void SetRotation(const DirectX::XMFLOAT3 &rotation) { m_Rotation = rotation; }
-	const DirectX::XMFLOAT3 &GetRotation() const { return m_Rotation; }
+	void SetTranslation(const vec3f &translation) { m_Translation = translation; }
+	const vec3f &GetTranslation() const { return m_Translation; }
+	void SetScale(const vec3f &scale) { m_Scale = scale; }
+	const vec3f &GetScale() const { return m_Scale; }
+	void SetRotation(const vec3f &rotation) { m_Rotation = rotation; }
+	const vec3f &GetRotation() const { return m_Rotation; }
 };
 
 }
