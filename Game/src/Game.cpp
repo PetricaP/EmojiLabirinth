@@ -3,7 +3,7 @@
 #include "AABB2D.h"
 #include <iomanip>
 
-constexpr ecs::Group GROUP_WALL = 0;
+static constexpr ecs::Group GROUP_WALL = 0;
 
 /* Entry point */
 std::unique_ptr<Application> create_application() {
@@ -27,53 +27,86 @@ int Game::Run() {
 }
 
 void Game::Init() {
+	AABB2D::Test();
 	InitSettings();
+
+	math::vec2f v1{4, 0};
+	math::vec2f v2{2, 2};
+	auto v2_n = math::normalize(v2);
+	auto v1_p = math::reflect(v1, v2);
 
 	m_EmojiTexture = m_Renderer.CreateTexture("emoji.dds");
 	m_BricksTexture = m_Renderer.CreateTexture("bricks.dds");
 
-	ecs::Entity *emoji = &m_ECS.AddEntity();
+	auto emoji = &m_ECS.AddEntity();
 
 	emoji->AddComponent<CTransform2D>();
 	emoji->GetComponent<CTransform2D>().SetTranslation({0.0f, -0.3f});
 	emoji->GetComponent<CTransform2D>().SetScale({0.1f, 0.1f});
 
-	emoji->AddComponent<CBoxCollider2D>(
-		xm::vec2f{-0.1f, -0.1f},
-		xm::vec2f{ 0.1f,  0.1f},
-		[emoji] (const CBoxCollider2D &other, const IntersectionData &data){
-			// WTF
-			/*
-			if (other.entity->HasGroup(GROUP_WALL)) {
-				auto &velocity = emoji->GetComponent<CMotionComponent2D>().GetVelocity();
-				xm::vec2f newVelocity = velocity * -1.5f;
-				auto &transform = emoji->GetComponent<CTransform2D>();
-				xm::vec2f newTranslation = transform.GetTranslation() - abs(data.distance);
-				transform.SetTranslation(newTranslation);
-				emoji->GetComponent<CMotionComponent2D>().SetVelocity(newVelocity);
-				emoji->GetComponent<CMotionComponent2D>().SetAcceleration(
-					{0.0f, 0.0f});
-			}
-			*/
-		}
-	);
-
 	emoji->AddComponent<CSprite>(m_RenderParams, m_EmojiTexture);
 
 	emoji->AddComponent<CMotionComponent2D>();
 
+	emoji->AddComponent<CBoxCollider2D>(
+		math::vec2f{-0.1f, -0.1f},
+		math::vec2f{ 0.1f,  0.1f},
+		[emoji] (const CBoxCollider2D &other, const IntersectionData &data) {
+			if (other.entity->HasGroup(GROUP_WALL)) {
+				DEBUG_LOG("Emoji colliding\n");
+				// TODO: how to solve the collission
+				auto &transform = emoji->GetComponent<CTransform2D>();
+
+				auto &motionComponent = emoji->GetComponent<CMotionComponent2D>();
+
+				const auto &aabb = emoji->GetComponent<CBoxCollider2D>().GetAABB();
+				const auto &aabbWall = other.GetAABB();
+
+				auto halfSize = (aabb.GetMaxExtents() - aabb.GetMinExtents()) / 2;
+				auto wallHalfSize = (aabbWall.GetMaxExtents() - aabbWall.GetMinExtents()) / 2;
+
+				auto center = aabb.GetTranslation() + halfSize;
+				auto centerWall = aabbWall.GetTranslation() + wallHalfSize;
+
+				auto delta = centerWall - center;
+				std::stringstream ss;
+				ss << delta.x << " " << delta.y << std::endl;
+				DEBUG_LOG(ss.str().c_str());
+
+				auto intersect = math::vec2f(abs(delta.x), abs(delta.y)) - wallHalfSize - halfSize;
+				if(intersect.x < 0.0f && intersect.y < 0.0f) {
+					if(intersect.x > intersect.y) {
+						if(delta.x > 0.0f) {
+							transform.Move({intersect.x, 0.0f});
+						} else {
+							transform.Move({-intersect.x, 0.0f});
+						}
+						motionComponent.SetVelocity({0, motionComponent.GetVelocity().y});
+					} else {
+						if(delta.y > 0.0f) {
+							transform.Move({0.0f, intersect.y});
+						} else {
+							transform.Move({0.0f, -intersect.y});
+						}
+						motionComponent.SetVelocity({motionComponent.GetVelocity().x, 0});
+					}
+				}
+			}
+		}
+	);
+
 	emoji->AddComponent<CMovementControl>();
 
 	emoji->GetComponent<CMovementControl>().controls.push_back(
-		{xm::vec2f{5.0f, 0}, &m_Horizontal});
+		{math::vec2f{5.0f, 0}, &m_Horizontal});
 
 	emoji->GetComponent<CMovementControl>().controls.push_back(
-		{xm::vec2f{0, 5.0f}, &m_Vertical});
+		{math::vec2f{0, 5.0f}, &m_Vertical});
 
 	emoji->AddComponent<CCamera2D>(m_RenderParams, m_Camera,
-								  xm::vec2f{0.0f, 0.5f});
+								  math::vec2f{0.0f, 0.2f});
 
-	ecs::Entity *bricks = &m_ECS.AddEntity();
+	auto bricks = &m_ECS.AddEntity();
 
 	bricks->AddComponent<CTransform2D>();
 	bricks->GetComponent<CTransform2D>().SetScale({0.1f, 0.1f});
@@ -81,13 +114,25 @@ void Game::Init() {
 	bricks->AddGroup(GROUP_WALL);
 
 	bricks->AddComponent<CBoxCollider2D>(
-		xm::vec2f{-0.1f, -0.1f},
-		xm::vec2f{0.1f, 0.1f});
-
+		math::vec2f{-0.1f, -0.1f},
+		math::vec2f{0.1f, 0.1f});
 
 	bricks->AddComponent<CSprite>(m_RenderParams, m_BricksTexture);
 
-	ecs::Entity *wall1 = &m_ECS.AddEntity();
+	auto bricks2 = &m_ECS.AddEntity();
+
+	bricks2->AddComponent<CTransform2D>();
+	bricks2->GetComponent<CTransform2D>().SetScale({0.05f, 0.2f});
+	bricks2->GetComponent<CTransform2D>().SetTranslation({0.7f, 0.3f});
+	bricks2->AddGroup(GROUP_WALL);
+
+	bricks2->AddComponent<CBoxCollider2D>(
+		math::vec2f{-0.05f, -0.2f},
+		math::vec2f{0.05f, 0.2f});
+
+	bricks2->AddComponent<CSprite>(m_RenderParams, m_BricksTexture);
+
+	auto wall1 = &m_ECS.AddEntity();
 
 	wall1->AddComponent<CTransform2D>();
 	wall1->GetComponent<CTransform2D>().SetScale({0.6f, 0.02f});
@@ -95,7 +140,12 @@ void Game::Init() {
 
 	wall1->AddComponent<CSprite>(m_RenderParams, m_BricksTexture);
 
-	ecs::Entity *wall2 = &m_ECS.AddEntity();
+	wall1->AddGroup(GROUP_WALL);
+
+	wall1->AddComponent<CBoxCollider2D>(
+		math::vec2f{-0.1f, -0.1f}, math::vec2f{0.1f, 0.1f});
+
+	auto wall2 = &m_ECS.AddEntity();
 
 	wall2->AddComponent<CTransform2D>();
 	wall2->GetComponent<CTransform2D>().SetScale({0.04f, 0.5f});
@@ -103,9 +153,11 @@ void Game::Init() {
 
 	wall2->AddComponent<CSprite>(m_RenderParams, m_BricksTexture);
 
+	wall2->AddComponent<CBoxCollider2D>(
+		math::vec2f{-0.1f, -0.1f}, math::vec2f{0.1f, 0.1f});
+
 	const float af = 1.0f;
 	const float vf = 4.0f;
-
 
 	ecs::Entity *tmp = nullptr;
 	
@@ -118,15 +170,15 @@ void Game::Init() {
 
 		tmp->AddComponent<CSprite>(m_RenderParams, m_BricksTexture);
 
-		xm::vec2f acceleration{math::randf(-af, af), math::randf(-af, af)};
+		math::vec2f acceleration{math::randf(-af, af), math::randf(-af, af)};
 		tmp->AddComponent<CMotionComponent2D>(-vf * acceleration, acceleration);
 	}
 }
 
 void Game::Update(float deltaTime) {
 	m_ECS.Refresh();
-	m_InteractionSystem.Update();
 	m_ECS.Update(deltaTime);
+	m_InteractionSystem.Update();
 }
 
 void Game::Render() {
@@ -168,8 +220,9 @@ void Game::ProcessWindowResizeEvent(const WindowResizeEvent &event) {
 	m_Window.SetWidth(event.GetWidth());
 
 	/* This should be managed by the camera class */
-	m_RenderParams.SetProjection(
-		DirectX::XMMatrixScaling(m_Window.GetAspectRatio(), 1.0f, 1.0f));
+	//m_RenderParams.SetProjection(
+		//DirectX::XMMatrixScaling(m_Window.GetAspectRatio(), 1.0f, 1.0f));
+	m_Camera.SetAspectRatio(m_Window.GetAspectRatio());
 }
 
 void Game::OnEvent(const Event &event) {
@@ -188,7 +241,7 @@ void Game::OnEvent(const Event &event) {
 }
 
 void Game::InitSettings() {
-	srand(time(nullptr));
+	srand(static_cast<uint32_t>(time(nullptr)));
 	d3d11::Font::Init(m_Window.GetWidth(), m_Window.GetHeight());
 	m_Window.AddEventListener(this);
 

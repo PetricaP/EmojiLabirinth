@@ -22,7 +22,7 @@ class Window : public ::Window {
 	void ToggleFullscreen() override;
 
 	friend LRESULT CALLBACK wnd_proc(HWND hWnd, UINT msg, WPARAM wParam,
-								 LPARAM lParam);
+									 LPARAM lParam);
 	void SetWidth(uint32_t width) {
 		m_Width = width;
 	}

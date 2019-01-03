@@ -6,17 +6,20 @@
 
 class AABB2D {
   private:
-	xm::vec2f m_MinExtents;
-	xm::vec2f m_MaxExtents;
-	xm::vec2f m_Translation;
+	math::vec2f m_MinExtents;
+	math::vec2f m_MaxExtents;
+	math::vec2f m_Translation;
   public:
-	AABB2D(const xm::vec2f &minExtents, const xm::vec2f &maxExtents)
+	AABB2D(const math::vec2f &minExtents, const math::vec2f &maxExtents)
 	: m_MinExtents(minExtents), m_MaxExtents(maxExtents), m_Translation({0.0f, 0.0f}) {}
 
 	IntersectionData IntersectAABB2D(const AABB2D &other) const;
 
-	void SetTranslation(const xm::vec2f &translation) { m_Translation = translation; }
+	void SetTranslation(const math::vec2f &translation) { m_Translation = translation; }
 
-	const DirectX::XMFLOAT2 &GetMinExtents() const { return m_MinExtents; }
-	const DirectX::XMFLOAT2 &GetMaxExtents() const { return m_MaxExtents; }
+	const math::vec2f &GetMinExtents() const { return m_MinExtents; }
+	const math::vec2f &GetMaxExtents() const { return m_MaxExtents; }
+	const math::vec2f &GetTranslation() const { return m_Translation; }
+
+	static void Test();
 };

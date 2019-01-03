@@ -1,6 +1,7 @@
 #pragma once
 
 #include "EventListener.h"
+#include <memory>
 
 struct Application : public EventListener {
 	virtual int Run() = 0;

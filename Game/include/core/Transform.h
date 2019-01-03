@@ -2,7 +2,7 @@
 
 #include "MathUtils.h"
 
-namespace xm {
+namespace math {
 
 struct Transform {
 	vec3f m_Translation;

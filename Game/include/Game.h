@@ -7,7 +7,6 @@
 #include "Camera2D.h"
 #include "RenderParams.h"
 #include "InteractionSystem.h"
-#include <memory>
 
 class Game : public Application {
   private:

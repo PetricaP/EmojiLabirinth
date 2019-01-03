@@ -22,7 +22,7 @@ class InteractionSystem : public ecs::Listener {
 
 	void Update() {
 		for(int i = 0; i < m_Colliders.size() - 1; ++i) {
-			for(int j = i + 1; i < m_Colliders.size(); ++i) {
+			for(int j = i + 1; j < m_Colliders.size(); ++j) {
 				auto data = m_Colliders[i]->m_AABB.IntersectAABB2D(m_Colliders[j]->m_AABB);
 				if(data.intersects) {
 					if(m_Colliders[i]->OnCollissionEnter) {

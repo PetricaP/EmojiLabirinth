@@ -132,3 +132,4 @@ class unique_handle {
 };
 
 } // namespace d3d11
+

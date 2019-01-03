@@ -7,11 +7,12 @@
 #include "Sprite.h"
 #include "Transform.h"
 #include "Transform2D.h"
+#include "RenderParams.h"
 #include <functional>
 
-struct CTransform : public ecs::Component, public xm::Transform {};
+struct CTransform : public ecs::Component, public math::Transform {};
 
-struct CTransform2D : public ecs::Component, public xm::Transform2D {};
+struct CTransform2D : public ecs::Component, public math::Transform2D {};
 
 struct CSprite : public ecs::Component, public Sprite {
 	RenderParams &m_RenderParams;
@@ -37,13 +38,13 @@ struct CSprite : public ecs::Component, public Sprite {
 struct CCamera2D : public ecs::Component {
 	RenderParams &m_RenderParams;
 	CTransform2D *transform;
-	xm::vec2f m_Offset;
+	math::vec2f m_Offset;
 	Camera2D &camera;
 
 	float aspectRatio;
 
 	CCamera2D(RenderParams &renderParams, Camera2D &camera,
-			  xm::vec2f offset = xm::vec2f(0.0f, 0.0f))
+			  math::vec2f offset = math::vec2f(0.0f, 0.0f))
 		: camera(camera), m_RenderParams(renderParams), m_Offset(offset) {
 	}
 
@@ -72,7 +73,7 @@ class CBoxCollider2D : public ecs::Component {
 					   const IntersectionData &data)>
 		OnCollissionEnter;
 
-	CBoxCollider2D(const xm::vec2f &minExtents, const xm::vec2f &maxExtents,
+	CBoxCollider2D(const math::vec2f &minExtents, const math::vec2f &maxExtents,
 				   std::function<void(const CBoxCollider2D &other,
 									  const IntersectionData &data)>
 					   callback = nullptr)
@@ -83,25 +84,27 @@ class CBoxCollider2D : public ecs::Component {
 		m_AABB.SetTranslation(transform->GetTranslation());
 	}
 
+	const AABB2D &GetAABB() const { return m_AABB; }
+
 	friend class InteractionSystem;
 };
 
 namespace MotionIntegrators {
-void ModifiedEuler(xm::vec2f &position, xm::vec2f &velocity,
-				   const xm::vec2f &acceleration, float deltaTime) {
+void ModifiedEuler(math::vec2f &position, math::vec2f &velocity,
+				   const math::vec2f &acceleration, float deltaTime) {
 	velocity = velocity + acceleration * deltaTime;
 	position = position + velocity * deltaTime;
 }
 } // namespace MotionIntegrators
 
 class CMotionComponent2D : public ecs::Component {
-	xm::vec2f m_Velocity;
-	xm::vec2f m_Acceleration;
-	xm::Transform2D *m_Transform;
+	math::vec2f m_Velocity;
+	math::vec2f m_Acceleration;
+	math::Transform2D *m_Transform;
 
   public:
-	CMotionComponent2D(const xm::vec2f &velocity = {0.0f, 0.0f},
-					   const xm::vec2f &acceleration = {0.0f, 0.0f})
+	CMotionComponent2D(const math::vec2f &velocity = {0.0f, 0.0f},
+					   const math::vec2f &acceleration = {0.0f, 0.0f})
 		: m_Velocity(velocity), m_Acceleration(acceleration) {
 	}
 
@@ -110,24 +113,24 @@ class CMotionComponent2D : public ecs::Component {
 	}
 
 	void Update(float deltaTime) override {
-		xm::vec2f newPos = m_Transform->GetTranslation();
+		math::vec2f newPos = m_Transform->GetTranslation();
 		MotionIntegrators::ModifiedEuler(newPos, m_Velocity, m_Acceleration,
 										 deltaTime);
 		m_Transform->SetTranslation(newPos);
 	}
 
-	const xm::vec2f &GetVelocity() { return m_Velocity; }
-	void SetVelocity(const xm::vec2f &velocity) { m_Velocity = velocity; }
-	const xm::vec2f &GetAcceleration() { return m_Acceleration; }
-	void SetAcceleration(const xm::vec2f &acceleration) { m_Acceleration = acceleration; }
+	const math::vec2f &GetVelocity() { return m_Velocity; }
+	void SetVelocity(const math::vec2f &velocity) { m_Velocity = velocity; }
+	const math::vec2f &GetAcceleration() { return m_Acceleration; }
+	void SetAcceleration(const math::vec2f &acceleration) { m_Acceleration = acceleration; }
 };
 
 struct MovementControl {
-	xm::vec2f movement;
+	math::vec2f movement;
 	InputControl *inputControl;
 	float lastInputAmount;
 
-	MovementControl(const xm::vec2f &movement, InputControl *inputControl)
+	MovementControl(const math::vec2f &movement, InputControl *inputControl)
 		: movement(movement), inputControl(inputControl),
 		  lastInputAmount(inputControl->GetAmount()) {}
 };

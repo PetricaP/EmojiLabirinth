@@ -29,3 +29,4 @@ class Camera2D {
 	void UpdateViewMatrix();
 	void UpdateProjectionMatrix();
 };
+

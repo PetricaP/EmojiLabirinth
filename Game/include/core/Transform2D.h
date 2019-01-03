@@ -2,7 +2,7 @@
 
 #include <DirectXMath.h>
 
-namespace xm {
+namespace math {
 
 struct Transform2D {
 	vec2f m_Translation;
@@ -27,6 +27,7 @@ struct Transform2D {
 	const vec2f &GetScale() const { return m_Scale; }
 	void SetRotation(float rotation) { m_Rotation = rotation; }
 	float GetRotation() const { return m_Rotation; }
+	void Move(const vec2f &amount) { m_Translation = m_Translation + amount; }
 };
 
 }

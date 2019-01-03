@@ -123,9 +123,45 @@ inline XMFLOAT2 operator*(float s, const XMFLOAT2 &v1) {
 	return {v1.x * s, v1.y * s};
 }
 
+inline XMFLOAT2 operator/(const XMFLOAT2 &v1, float s) {
+	return {v1.x / s, v1.y / s};
+}
+
+inline XMFLOAT2 operator-(const XMFLOAT2 &v1) {
+	return {-v1.x, -v1.y};
+}
+
 } // namespace DirectX
 
-namespace xm {
+namespace math {
+
 using vec2f = DirectX::XMFLOAT2;
 using vec3f = DirectX::XMFLOAT3;
-} // namespace xm
+
+inline float norm(const vec2f &v) {
+	return sqrtf(v.x * v.x + v.y * v.y);
+}
+
+inline vec2f normalize(const vec2f &v) {
+	return v / norm(v);
+}
+
+inline float dot(const vec2f &v1, const vec2f &v2) {
+	return (v1.x * v2.x + v1.y * v2.y);
+}
+
+inline vec2f project(const vec2f &v1, const vec2f &v2) {
+	return v2 * dot(v1, v2) / (v2.x * v2.x + v2.y * v2.y);
+}
+
+inline vec2f reflect(const vec2f &v1, const vec2f &v2) {
+	auto u1 = v2 * dot(v1, v2) / (v2.x * v2.x + v2.y * v2.y);
+	auto u2 = u1 - v1;
+	return v1 + 2 * u2;
+}
+
+}
+
+inline bool operator!=(const math::vec2f &v1, const math::vec2f &v2) {
+	return (v1.x != v2.x || v1.y != v2.y);
+}

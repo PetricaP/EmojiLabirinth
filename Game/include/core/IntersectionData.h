@@ -1,8 +1,10 @@
 #pragma once
 
+#include "MathUtils.h"
+
 struct IntersectionData {
-	const float distance;
+	const math::vec2f distance;
 	const bool intersects;
-	IntersectionData(bool intersects, float distance)
+	IntersectionData(bool intersects, math::vec2f distance)
 		: intersects(intersects), distance(distance) {}
 };

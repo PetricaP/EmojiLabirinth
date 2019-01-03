@@ -71,7 +71,7 @@ void Renderer::Submit(const Drawable &drawable) const {
 										&drawable.m_VertexSize, &offset);
 
 	auto indexBuffer = drawable.m_IndexBuffer->m_Handle.Get();
-	m_DeviceContext->IASetIndexBuffer(indexBuffer, 
+	m_DeviceContext->IASetIndexBuffer(indexBuffer,
 									  DXGI_FORMAT_R32_UINT, 0);
 
 	m_DeviceContext->DrawIndexed(drawable.m_NumIndices, 0, 0);
@@ -102,7 +102,7 @@ IndexBuffer Renderer::CreateIndexBuffer(const void *data, UINT size) const {
 	D3D11_SUBRESOURCE_DATA indexData{0};
 	indexData.pSysMem = data;
 
-	DXCall(m_Device->CreateBuffer(&indexBufferDesc, &indexData, 
+	DXCall(m_Device->CreateBuffer(&indexBufferDesc, &indexData,
 		indexBuffer.m_Handle.GetAddressOf()));
 
 	return indexBuffer;
@@ -147,12 +147,12 @@ void Renderer::RenderText(const Font &font, const std::string &text, float x, fl
 ShaderProgram Renderer::CreateShaderProgram(const std::string &vsFilePath,
 											const std::string &psFilePath) const {
 	ShaderProgram program;
-	
+
 	program.m_VSData = load_file(vsFilePath);
 	program.m_PSData = load_file(psFilePath);
 
 	DXCall(m_Device->CreateVertexShader(
-		program.m_VSData.data(), program.m_VSData.size(), nullptr, 
+		program.m_VSData.data(), program.m_VSData.size(), nullptr,
 		program.m_VertexShader.GetAddressOf()));
 
 	DXCall(m_Device->CreatePixelShader(
@@ -168,8 +168,8 @@ InputLayout Renderer::CreateInputLayout(
 	std::vector<D3D11_INPUT_ELEMENT_DESC> layout(inputElements.size());
 
 	layout[0] = {inputElements[0].name.c_str(), 0,
-						 inputElements[0].format, 0, 0,
-						 D3D11_INPUT_PER_VERTEX_DATA, 0};
+				 inputElements[0].format, 0, 0,
+				 D3D11_INPUT_PER_VERTEX_DATA, 0};
 	for (unsigned int i = 1; i < inputElements.size(); ++i) {
 		layout[i] = {inputElements[i].name.c_str(), 0,
 			inputElements[i].format, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0};
@@ -186,7 +186,7 @@ InputLayout Renderer::CreateInputLayout(
 
 Texture Renderer::CreateTexture(const std::string &filePath) const {
 	Texture texture;
-	
+
 	std::wstring wFilePath;
 	wFilePath.assign(filePath.begin(), filePath.end());
 
@@ -318,10 +318,10 @@ void Renderer::InitSwapChain() {
 	IDXGIAdapter *dxgiAdapter = nullptr;
 	DXCall(dxgiDevice->GetParent(__uuidof(IDXGIAdapter), (void**)&dxgiAdapter));
 	IDXGIFactory *dxgiFactory = nullptr;
-	DXCall(dxgiAdapter->GetParent(__uuidof(IDXGIFactory), (void**)&dxgiFactory)); 
+	DXCall(dxgiAdapter->GetParent(__uuidof(IDXGIFactory), (void**)&dxgiFactory));
 
 	DXCall(dxgiFactory->CreateSwapChain(m_Device.Get(), &swapchainDesc,
-		m_SwapChain.GetAddressOf())); 
+		m_SwapChain.GetAddressOf()));
 
 	DX_SAFE_RELEASE(dxgiFactory);
 	DX_SAFE_RELEASE(dxgiAdapter);
@@ -336,8 +336,8 @@ void Renderer::InitDeviceAndContext() {
 	D3D_FEATURE_LEVEL featureLevel;
 
 	DXCall(D3D11CreateDevice(0, D3D_DRIVER_TYPE_HARDWARE, 0, createDeviceFlags, 0, 0,
-								   D3D11_SDK_VERSION, m_Device.GetAddressOf(),
-								   &featureLevel, m_DeviceContext.GetAddressOf()));
+						     D3D11_SDK_VERSION, m_Device.GetAddressOf(),
+							 &featureLevel, m_DeviceContext.GetAddressOf()));
 }
 
 } // namespace d3d11

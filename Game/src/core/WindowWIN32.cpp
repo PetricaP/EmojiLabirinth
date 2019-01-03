@@ -40,11 +40,13 @@ std::unique_ptr<Event> create_event(UINT msg, LPARAM lParam, WPARAM wParam) {
 			}
 			break;
 		case WM_KEYUP:
-			e = std::make_unique<KeyboardEvent>(time.wMilliseconds, 0, false, repeat, static_cast<KeyboardEvent::Key>(wParam));
+			e = std::make_unique<KeyboardEvent>(time.wMilliseconds, 0, false,
+				repeat, static_cast<KeyboardEvent::Key>(wParam));
 			enabled[wParam] = 0;
 			break;
 		case WM_SIZE:
-			e = std::make_unique<WindowResizeEvent>(time.wMilliseconds, 0, LOWORD(lParam), HIWORD(lParam));
+			e = std::make_unique<WindowResizeEvent>(time.wMilliseconds, 0,
+				LOWORD(lParam), HIWORD(lParam));
 			break;
 		default:
 			break;
@@ -73,34 +75,37 @@ static LRESULT CALLBACK wnd_proc(HWND hWnd, UINT msg, WPARAM wParam,
 
 Window::Window(const std::string title, uint32_t width, uint32_t height)
 	: ::Window(title, width, height), m_Window(nullptr), m_MSG{nullptr} {
-	WNDCLASS wc;
+	static constexpr char pClassName[] = "BasicWindowClass";
+
+	WNDCLASS wc{0};
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = wnd_proc;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
 	wc.hInstance = nullptr;
-	wc.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
-	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 	wc.hbrBackground = nullptr;
 	wc.lpszMenuName = nullptr;
-	wc.lpszClassName = "BasicWndClass";
+	wc.lpszClassName = "BasicWindowClass";
+	wc.hIcon = nullptr;
+	wc.hCursor = nullptr;
 
 	if (!RegisterClass(&wc)) {
 		MessageBox(nullptr, "RegisterClass FAILED", nullptr, 0);
+		std::exit(-1);
 	}
 
-	m_Window = CreateWindow("BasicWNDClass", m_Title.c_str(),
-							WS_OVERLAPPEDWINDOW, 100, 100, width, height,
-							nullptr, nullptr, nullptr, nullptr);
+	m_Window = CreateWindow("BasicWindowClass", m_Title.c_str(),
+							  WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU,
+							  100, 100, width, height,
+							  nullptr, nullptr, nullptr, nullptr);
 	if (m_Window == nullptr) {
 		MessageBox(nullptr, "Failed to create Window", nullptr, 0);
+		std::exit(-1);
 	}
-
-	HDC m_DeviceContext = GetDC(m_Window);
 
 	_Windows[m_Window] = this;
 
-	ShowWindow(m_Window, DEFAULT_SHOW);
+	ShowWindow(m_Window, SW_SHOW);
 	UpdateWindow(m_Window);
 
 	std::stringstream ss;
@@ -137,5 +142,4 @@ void Window::UpdateListeners(const Event *e) {
 }
 
 }
-
 
