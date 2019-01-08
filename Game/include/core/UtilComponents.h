@@ -19,8 +19,9 @@ struct CSprite : public ecs::Component, public Sprite {
 	CTransform2D *transform;
 
 	CSprite(RenderParams &renderParams, const d3d11::Texture &texture,
-			const math::rect *rect = nullptr)
-		: Sprite(renderParams.m_Renderer, texture, rect),
+		   const math::vec2f &bottomLeft = {0.0f, 0.0f},
+		   const math::vec2f &topRight = {1.0f, 1.0f})
+		: Sprite(renderParams.m_Renderer, texture, bottomLeft, topRight),
 		  m_RenderParams(renderParams) {
 	}
 
@@ -116,6 +117,11 @@ class CMotionComponent2D : public ecs::Component {
 		math::vec2f newPos = m_Transform->GetTranslation();
 		MotionIntegrators::ModifiedEuler(newPos, m_Velocity, m_Acceleration,
 										 deltaTime);
+		auto norm = math::norm(m_Velocity);
+		static constexpr float maxVel = 0.8f;
+		if(norm > maxVel) {
+			m_Velocity = m_Velocity / norm * maxVel;
+		}
 		m_Transform->SetTranslation(newPos);
 	}
 

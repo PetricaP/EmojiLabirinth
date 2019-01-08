@@ -27,6 +27,7 @@ static const Color BLUE{0.0f, 0.0f, 1.0f, 1.0f};
 static const Color GREEN{0.0f, 0.0f, 0.0f, 1.0f};
 static const Color GRAY{0.2f, 0.2f, 0.2f, 1.0f};
 static const Color CHERRY{0.5f, 0.2f, 0.2f, 1.0f};
+static const Color BLACK{0.0f, 0.0f, 0.0f, 1.0f};
 
 }
 

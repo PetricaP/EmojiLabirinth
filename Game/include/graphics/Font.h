@@ -23,7 +23,8 @@ class Font {
 		BLUE = 0xff0000ff,
 		RED = 0xffff0000,
 		GREEN = 0xff00ff00,
-		ORANGE = 0xff5599ff
+		ORANGE = 0xff5599ff,
+		YELLOW = 0xff55ffff
 	};
 };
 

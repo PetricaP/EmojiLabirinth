@@ -87,7 +87,7 @@ Window::Window(const std::string title, uint32_t width, uint32_t height)
 	wc.lpszMenuName = nullptr;
 	wc.lpszClassName = "BasicWindowClass";
 	wc.hIcon = nullptr;
-	wc.hCursor = nullptr;
+	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 
 	if (!RegisterClass(&wc)) {
 		MessageBox(nullptr, "RegisterClass FAILED", nullptr, 0);
@@ -95,7 +95,7 @@ Window::Window(const std::string title, uint32_t width, uint32_t height)
 	}
 
 	m_Window = CreateWindow("BasicWindowClass", m_Title.c_str(),
-							  WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU,
+							 WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_OVERLAPPEDWINDOW,
 							  100, 100, width, height,
 							  nullptr, nullptr, nullptr, nullptr);
 	if (m_Window == nullptr) {
