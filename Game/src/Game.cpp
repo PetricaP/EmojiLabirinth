@@ -111,6 +111,9 @@ ecs::Entity *Game::CreatePlayer(const d3d11::Texture &texture, math::vec2f posit
 
 	player->AddComponent<CSprite>(m_RenderParams, texture);
 
+	player->AddComponent<CCamera2D>(m_RenderParams, m_Camera,
+								  math::vec2f{0.0f, 0.0f});
+
 	player->AddComponent<CMotionComponent2D>();
 
 	player->AddComponent<CBoxCollider2D>(
@@ -129,14 +132,13 @@ ecs::Entity *Game::CreatePlayer(const d3d11::Texture &texture, math::vec2f posit
 
 	player->AddComponent<CMovementControl>();
 
+	const float amount = 5.0f;
 	player->GetComponent<CMovementControl>().controls.push_back(
-		{math::vec2f{2.0f, 0}, &m_Horizontal});
+		{math::vec2f{amount, 0}, &m_Horizontal});
 
 	player->GetComponent<CMovementControl>().controls.push_back(
-		{math::vec2f{0, 2.0f}, &m_Vertical});
+		{math::vec2f{0, amount}, &m_Vertical});
 
-	player->AddComponent<CCamera2D>(m_RenderParams, m_Camera,
-								  math::vec2f{0.0f, 0.0f});
 
 	return player;
 }
@@ -146,7 +148,7 @@ void Game::Init() {
 	InitSettings();
 
 	m_PlayerTexture = m_Renderer.CreateTexture("mouse.dds");
-	m_BricksTexture = m_Renderer.CreateTexture("graysquare.dds");
+	m_BricksTexture = m_Renderer.CreateTexture("bricks.dds");
 	m_CheeseTexture = m_Renderer.CreateTexture("cheese.dds");
 
 	LoadMap("map4.txt");
