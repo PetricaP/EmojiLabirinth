@@ -1,11 +1,15 @@
 #include "Game.h"
 #include "UtilComponents.h"
+#include "GameComponents.h"
 #include "AABB2D.h"
 #include <iomanip>
 #include <fstream>
+#include <ctime>
 
 static constexpr ecs::Group GROUP_WALL = 0;
-static constexpr ecs::Group GROUP_CHEESE = 1;
+static constexpr ecs::Group GROUP_HEARTS = 1;
+static constexpr ecs::Group GROUP_ENEMY = 2;
+static constexpr ecs::Group GROUP_LIKES = 3;
 
 /* Entry point */
 std::unique_ptr<Application> create_application() {
@@ -14,13 +18,14 @@ std::unique_ptr<Application> create_application() {
 
 Game::Game() : m_Window(TITLE, INITIAL_WIDTH, INITIAL_HEIGHT),
 	m_Renderer(m_Window), m_RenderParams(m_Renderer),
-	m_Camera(m_Window.GetAspectRatio()), m_InteractionSystem(m_ECS), m_Cheeses(0),
-	m_MinX(0.0f), m_MinY(0.0f), m_State(State::PLAY), m_Player(nullptr) {}
+	m_Camera(m_Window.GetAspectRatio()), m_InteractionSystem(m_ECS),
+	m_Hearts(0), m_State(State::MENU), m_Player(nullptr), map(MAX_TILES),
+	m_CurrentMap(Map::MAP_FOUR), m_ShouldClose(false) {}
 
 int Game::Run() {
 	Init();
 	m_Timer.Reset();
-	while (!m_Window.ShouldClose()) {
+	while (!m_ShouldClose) {
 		m_Timer.Tick();
 		m_Window.PollEvents();
 		Game::Update(m_Timer.DeltaTime());
@@ -62,7 +67,7 @@ static void solve_wall_collission(ecs::Entity *entity, const CBoxCollider2D &wal
 		} else {
 			transform.Move({0.0f, -intersect.y});
 		}
-		motionComponent.SetVelocity({motionComponent.GetVelocity().x, 0});
+		motionComponent.SetVelocity( {motionComponent.GetVelocity().x, 0});
 	}
 }
 
@@ -84,7 +89,7 @@ static ecs::Entity *create_wall(ecs::Manager &ecs, RenderParams &params,
 	return wall;
 }
 
-static ecs::Entity *create_cheese(ecs::Manager &ecs, RenderParams &params,
+static ecs::Entity *create_collectable(ecs::Manager &ecs, RenderParams &params,
 	const d3d11::Texture &texture, math::vec2f position, math::vec2f extents) {
 
 	auto wall = &ecs.AddEntity();
@@ -92,7 +97,7 @@ static ecs::Entity *create_cheese(ecs::Manager &ecs, RenderParams &params,
 	wall->AddComponent<CTransform2D>();
 	wall->GetComponent<CTransform2D>().SetScale(extents);
 	wall->GetComponent<CTransform2D>().SetTranslation(position);
-	wall->AddGroup(GROUP_CHEESE);
+	wall->AddGroup(GROUP_HEARTS);
 
 	wall->AddComponent<CBoxCollider2D>(
 		math::vec2f{-extents.x, -extents.y},
@@ -102,7 +107,8 @@ static ecs::Entity *create_cheese(ecs::Manager &ecs, RenderParams &params,
 	return wall;
 }
 
-ecs::Entity *Game::CreatePlayer(const d3d11::Texture &texture, math::vec2f position, math::vec2f extents) {
+ecs::Entity *Game::CreatePlayer(const d3d11::Texture &texture, math::vec2f position,
+								math::vec2f extents) {
 	auto player = &m_ECS.AddEntity();
 
 	player->AddComponent<CTransform2D>();
@@ -123,9 +129,17 @@ ecs::Entity *Game::CreatePlayer(const d3d11::Texture &texture, math::vec2f posit
 			if (other.entity->HasGroup(GROUP_WALL)) {
 				solve_wall_collission(player, other);
 			}
-			if (other.entity->HasGroup(GROUP_CHEESE)) {
+			if (other.entity->HasGroup(GROUP_HEARTS)) {
 				other.entity->Destroy();
-				++m_Cheeses;
+				++m_Hearts;
+			}
+			if (other.entity->HasGroup(GROUP_HEARTS)) {
+				other.entity->Destroy();
+				++m_Likes;
+			}
+			if (other.entity->HasGroup(GROUP_ENEMY)) {
+				other.entity->Destroy();
+				m_State = State::LOST;
 			}
 		}
 	);
@@ -143,109 +157,381 @@ ecs::Entity *Game::CreatePlayer(const d3d11::Texture &texture, math::vec2f posit
 	return player;
 }
 
+ecs::Entity *Game::CreateEnemy(const d3d11::Texture &texture, Node &node,
+							   math::vec2f extents) {
+	auto enemy = &m_ECS.AddEntity();
+
+	enemy->AddComponent<CTransform2D>();
+	enemy->GetComponent<CTransform2D>().SetTranslation(node.GetTile()->GetPosition());
+	enemy->GetComponent<CTransform2D>().SetScale(extents);
+
+	enemy->AddComponent<CSprite>(m_RenderParams, texture);
+
+	enemy->AddGroup(GROUP_ENEMY);
+
+	enemy->AddComponent<CMotionComponent2D>();
+
+	enemy->AddComponent<CBoxCollider2D>(
+		math::vec2f{-0.08f, -0.08f},
+		math::vec2f{ 0.08f,  0.08f});
+
+	enemy->AddComponent<CEnemyControl>(node);
+
+	return enemy;
+}
+
 void Game::Init() {
 	AABB2D::Test();
 	InitSettings();
 
-	m_PlayerTexture = m_Renderer.CreateTexture("mouse.dds");
-	m_BricksTexture = m_Renderer.CreateTexture("bricks.dds");
-	m_CheeseTexture = m_Renderer.CreateTexture("cheese.dds");
-
-	LoadMap("map4.txt");
+	m_PlayerTexture = m_Renderer.CreateTexture("res/textures/emoji.dds");
+	m_BricksTexture = m_Renderer.CreateTexture("res/textures/bricks.dds");
+	m_HeartTexture = m_Renderer.CreateTexture("res/textures/heart.dds");
+	m_LikeTexture = m_Renderer.CreateTexture("res/textures/like.dds");
+	m_EnemyTexture = m_Renderer.CreateTexture("res/textures/devil.dds");
 }
 
-void Game::LoadMap(const std::string &path) {
+std::vector<Node> create_nodes(std::vector<std::vector<Tile>> &map, Tile *node_tile);
+
+bool Game::LoadMap(const std::string &path) {
+
+	for(auto &v : map) {
+		v.resize(MAX_TILES);
+	}
+
 	std::ifstream mapFile;
 	mapFile.open(path.c_str());
-	ASSERT(mapFile.is_open());
-	uint32_t line = 0;
-	uint32_t colon = 0;
-	m_TotalCheeses = 0;
-	uint32_t maxColon = colon;
+	if(!mapFile.is_open()) {
+		return false;
+	}
+	int32_t line = 0;
+	int32_t column = 0;
+	m_TotalHearts = 0;
+	m_TotalLikes = 0;
+	int32_t maxColon = column;
 	static constexpr float WALL_WIDTH = 0.14f;
 	static constexpr float WALL_HEIGHT = 0.02f;
+	std::vector<std::pair<uint32_t, uint32_t>> enemyPositions;
+	
 	while(!mapFile.eof()) {
 		char c = mapFile.get();
+		map[line][column / 2].row = line;
+		map[line][column / 2].column = column / 2;
+		map[line][column / 2].tileWidth = WALL_WIDTH * 2;
 		switch(c) {
 		case '_':
-			if(colon % 2 == 1) {
+			if(column % 2 == 1) {
 				create_wall(m_ECS, m_RenderParams, m_BricksTexture,
-							{(colon) * WALL_WIDTH, line * WALL_WIDTH * 2}, {WALL_WIDTH, WALL_HEIGHT});
+							{(column) * WALL_WIDTH, -line * WALL_WIDTH * 2},
+							{WALL_WIDTH, WALL_HEIGHT});
+				map[line][column / 2].down = true;
+				map[line + 1][column / 2].up = true;
 			}
-			++colon;
+			++column;
 			break;
 		case '|':
 			create_wall(m_ECS, m_RenderParams, m_BricksTexture,
-						{colon * WALL_WIDTH, line * WALL_WIDTH * 2 - WALL_WIDTH}, {WALL_HEIGHT, WALL_WIDTH});
-			++colon;
+						{column * WALL_WIDTH, -(line * WALL_WIDTH * 2 - WALL_WIDTH)},
+						{WALL_HEIGHT, WALL_WIDTH});
+			map[line][column / 2].left = true;
+			if(column > 0) {
+				map[line][column / 2 - 1].right = true;
+			}
+			++column;
 			break;
 		case 'p':
-			m_Player = CreatePlayer(m_PlayerTexture,{(colon) * WALL_WIDTH + WALL_WIDTH / 2.0f, line * WALL_WIDTH + WALL_WIDTH / 2.0f}, {0.07f, 0.05f});
-			++colon;
+			m_Player = CreatePlayer(m_PlayerTexture, 
+				{(column) * WALL_WIDTH + WALL_WIDTH / 2.0f,
+				-(line * WALL_WIDTH + WALL_WIDTH / 2.0f)},
+				{0.07f, 0.07f});
+			++column;
+			break;
+		case 'e':
+			enemyPositions.push_back(std::make_pair(line, column / 2));
+			++column;
 			break;
 		case 'c':
-			create_cheese(m_ECS, m_RenderParams, m_CheeseTexture,
-				{colon * WALL_WIDTH, line * WALL_WIDTH * 2 - WALL_WIDTH},
-				{0.045f, 0.06f});
-			++m_TotalCheeses;
-			++colon;
+			create_collectable(m_ECS, m_RenderParams, m_HeartTexture,
+				{column * WALL_WIDTH, -(line * WALL_WIDTH * 2 - WALL_WIDTH)},
+				{0.07f, 0.07f});
+			++m_TotalHearts;
+			++column;
+			break;
+		case 'l':
+			create_collectable(m_ECS, m_RenderParams, m_LikeTexture,
+				{column * WALL_WIDTH, -(line * WALL_WIDTH * 2 - WALL_WIDTH)},
+				{0.07f, 0.07f});
+			++m_TotalHearts;
+			++column;
 			break;
 		case '\n':
-			colon = 0;
+			column = 0;
 			++line;
 			break;
 		default:
-			++colon;
+			++column;
 			break;
 		}
-		if(colon > maxColon) {
-			maxColon = colon;
+		if(column > maxColon) {
+			maxColon = column;
 		}
 	}
+	m_MaxY = 0;
+	m_MinX = 0;
 	m_MaxX = WALL_WIDTH * (maxColon + 1);
-	m_MaxY = WALL_WIDTH * 2 * (line + 1);
+	m_MinY = -(WALL_WIDTH * 2 * line);
+
+	map.resize(line);
+	for(auto &v : map) {
+		v.resize(maxColon / 2);
+	}
+
+	std::stringstream ss;
+	for(uint32_t i = 0; i < map.size(); ++i) {
+		for(uint32_t j = 0; j < map[i].size(); ++j) {
+			auto &t = map[i][j];
+			ss << "{(r: " << t.row << ") (c: " << t.column <<
+				") (u: " << t.up << ") (d: " << t.down <<
+				") (l: " << t.left << ") (r: " << t.right << ")} ";
+			if(i > 0) {
+				if(!((t.up && t.down && !(t.left || t.right)) ||
+					(t.left && t.right && !(t.up || t.down)))) {
+					t.is_node = true;
+				} else {
+					t.is_node = false;
+				}
+			}
+		}
+		ss << std::endl;
+	}
+
+	DEBUG_LOG("Loaded map\n");
+	DEBUG_LOG(ss.str().c_str());
+
+	Tile *first_node_tile = nullptr;
+	for(uint32_t i = 0; i < map.size(); ++i) {
+		for(uint32_t j = 0; j < map[i].size(); ++j) {
+			if(map[i][j].is_node) {
+				first_node_tile = &map[i][j];
+				break;
+			}
+		}
+		if(first_node_tile) {
+			break;
+		}
+	}
+	ASSERT(first_node_tile);
+
+	nodes = create_nodes(map, first_node_tile);
+	for(auto &node : nodes) {
+		node.GetTile()->node = &node;
+	}
+
+	for(auto &enemyPosition : enemyPositions) {
+		for(auto &node : nodes) {
+			if(enemyPosition.first == node.GetTile()->row &&
+				enemyPosition.second == node.GetTile()->column) {
+				CreateEnemy(m_EnemyTexture, node, {0.07f, 0.07f});
+			}
+		}
+	}
+
+	ss.str(std::string());
+	ss << "NODES:\n";
+	for(auto node : nodes) {
+		ss << node << std::endl;
+	}
+	DEBUG_LOG(ss.str().c_str());
+	return true;
+}
+
+static inline void check_and_add(Tile *current_tile, Tile *tmp, Node &nod,
+								 std::vector<Tile *> &checked_node_tiles,
+								 std::vector<Tile *> &tile_nodes_to_check) {
+	if(tmp != current_tile && tmp->is_node) {
+		nod.AddNeighbor(tmp);
+		if(std::find(checked_node_tiles.begin(), checked_node_tiles.end(), tmp)
+			== checked_node_tiles.end()) {
+			if(std::find(tile_nodes_to_check.begin(), tile_nodes_to_check.end(), tmp)
+				== tile_nodes_to_check.end()) {
+				tile_nodes_to_check.push_back(tmp);
+			}
+		}
+	}
+}
+
+std::vector<Node> create_nodes(std::vector<std::vector<Tile>> &map, Tile *node_tile) {
+	std::vector<Tile *> checked_node_tiles;
+	std::vector<Tile *> tile_nodes_to_check;
+	std::vector<Node> nodes;
+
+	tile_nodes_to_check.push_back(node_tile);
+	while(!tile_nodes_to_check.empty()) {
+		auto current_tile = tile_nodes_to_check[tile_nodes_to_check.size() - 1];
+		tile_nodes_to_check.pop_back();
+
+		Node nod(current_tile);
+
+		Tile *tmp = current_tile;
+		while(tmp->up == false) {
+			if(tmp->row - 1 > 0) {
+				tmp = &map[tmp->row - 1][tmp->column];
+			}
+			if(tmp->is_node) break;
+		}
+		check_and_add(current_tile, tmp, nod, checked_node_tiles, tile_nodes_to_check);
+
+		tmp = current_tile;
+		while(tmp->down == false) {
+			if(tmp->row < map.size() - 1) {
+				tmp = &map[tmp->row + 1][tmp->column];
+			}
+			if(tmp->is_node) break;
+		}
+		check_and_add(current_tile, tmp, nod, checked_node_tiles, tile_nodes_to_check);
+
+		tmp = current_tile;
+		while(tmp->right == false) {
+			if(tmp->column < map[0].size() - 1) {
+				tmp = &map[tmp->row][tmp->column + 1];
+			}
+			if(tmp->is_node) break;
+		}
+		check_and_add(current_tile, tmp, nod, checked_node_tiles, tile_nodes_to_check);
+
+		tmp = current_tile;
+		while(tmp->left == false) {
+			if(tmp->column > 0) {
+				tmp = &map[tmp->row][tmp->column - 1];
+			}
+			if(tmp->is_node) break;
+		}
+		check_and_add(current_tile, tmp, nod, checked_node_tiles, tile_nodes_to_check);
+
+		checked_node_tiles.push_back(current_tile);
+		nodes.push_back(nod);
+	}
+
+	return nodes;
 }
 
 void Game::Update(float deltaTime) {
-	if(m_Player) {
-		auto transform = m_Player->GetComponent<CTransform2D>();
-		auto x = transform.GetTranslation().x;
-		auto y = transform.GetTranslation().y;
-		if(m_State != State::END && (x < m_MinX || x > m_MaxX || y < m_MinY || y > m_MaxY)) {
-			m_State = State::END;
-			m_EndTime = static_cast<uint32_t>(m_Timer.TotalTime());
+	static bool loaded = false;
+	if(!m_ShouldClose) {
+		m_ShouldClose = m_Window.ShouldClose();
+	}
+
+	if(!loaded && m_State != State::MENU) {
+		m_Timer.Reset();
+		if(LoadMap(m_Maps[m_CurrentMap])) {
+			loaded = true;
+			m_Renderer.SetClearColor(color::BLACK);
+		} else {
+			MessageBox(static_cast<HWND>(m_Window.GetAPIHandle()),
+				"The map could not be found!\nThis is a slot reserved for a custom user map.\nYou can find instructions on how to write one in the game directory.", "Error", MB_OK);
+			m_State = State::MENU;
 		}
 	}
-	m_ECS.Refresh();
-	m_ECS.Update(deltaTime);
-	m_InteractionSystem.Update();
+	if(m_State != State::LOST && m_State != State::MENU) {
+		if(m_Player) {
+			auto transform = m_Player->GetComponent<CTransform2D>();
+			auto x = transform.GetTranslation().x;
+			auto y = transform.GetTranslation().y;
+			if(m_State != State::WON && (x < m_MinX || x > m_MaxX
+									  || y < m_MinY || y > m_MaxY)) {
+				m_State = State::WON;
+				m_EndTime = static_cast<uint32_t>(m_Timer.TotalTime());
+			}
+		}
+		m_ECS.Refresh();
+		m_ECS.Update(deltaTime);
+		m_InteractionSystem.Update();
+	}
 }
 
 void Game::Render() {
 	m_Renderer.Clear();
 
-	m_ECS.Render();
+	if(m_State != State::MENU) {
+		m_ECS.Render();
+	}
 
 	std::stringstream ss;
-	if(m_State == State::PLAY) {
+	switch(m_State) {
+	case State::MENU:
+		ss << "MENU";
+		m_Renderer.RenderText(m_Font, ss.str(), -0.08f, -0.28f, 0.04f, 
+							  d3d11::Font::Color::LIGHT_BLUE);
+		d3d11::Font::Color color;
+		for(uint32_t i = 0; i < nr_maps; ++i) {
+			ss.str(std::string());
+			auto map = m_Maps[i];
+			std::string map_string(map);
+			map_string = map_string.substr(9, map_string.end() - map_string.begin());
+			map_string = map_string.substr(0, map_string.end() - map_string.begin() - 4);
+			if(i == m_CurrentMap) {
+				color = d3d11::Font::Color::YELLOW;
+			} else {
+				color = d3d11::Font::Color::GRAY;
+			}
+			ss << map_string << std::endl;
+			m_Renderer.RenderText(m_Font, ss.str(), -0.06f, 0.30f - (nr_maps - i) * 0.07f, 0.03f, 
+								  color);
+		}
+		break;
+	case State::PLAY:
 	#if defined(DEBUG) || defined(_DEBUG)
 		ss << "Frame Time: " << std::setprecision(2) << m_Timer.DeltaTime() << std::endl;
 	#endif
 		ss << "Time: " << static_cast<uint32_t>(m_Timer.TotalTime());
 		m_Renderer.RenderText(m_Font, ss.str(), -0.48f, -0.48f, 0.02f, 
 							  d3d11::Font::Color::GRAY);
-		ss.str(std::string());
-		ss << "Cheese: " << m_Cheeses;
-		m_Renderer.RenderText(m_Font, ss.str(), -0.48f, -0.38f, 0.02f, 
-							  d3d11::Font::Color::YELLOW);
-	} else if(m_State == State::END) {
+		if(m_TotalHearts) {
+			ss.str(std::string());
+			ss << "Hearts: " << m_Hearts;
+			m_Renderer.RenderText(m_Font, ss.str(), -0.48f, -0.38f, 0.02f, 
+								  d3d11::Font::Color::RED);
+		}
+		if(m_TotalLikes) {
+			ss.str(std::string());
+			ss << "Likes: " << m_Likes;
+			m_Renderer.RenderText(m_Font, ss.str(), -0.48f, -0.38f, 0.02f, 
+								  d3d11::Font::Color::RED);
+		}
+		break;
+	case State::WON:
 		ss << "You finished the game in " << m_EndTime << " seconds";
 		m_Renderer.RenderText(m_Font, ss.str(), -0.15f, 0.16f, 0.02f, 
 							  d3d11::Font::Color::GRAY);
-		ss.str(std::string());
-		ss << "\nYou collected " << m_Cheeses << " out of " << m_TotalCheeses << " pieces of cheese.";
-		m_Renderer.RenderText(m_Font, ss.str(), -0.17f, 0.2f, 0.02f, 
-							  d3d11::Font::Color::YELLOW);
+		if(m_TotalHearts) {
+			ss.str(std::string());
+			ss << "\nYou collected " << m_Hearts << " out of " << m_TotalHearts << " hearts.";
+			m_Renderer.RenderText(m_Font, ss.str(), -0.12f, 0.2f, 0.02f, 
+								  d3d11::Font::Color::RED);
+		}
+		if(m_TotalLikes) {
+			ss.str(std::string());
+			ss << "\nYou collected " << m_Likes << " out of " << m_TotalLikes << " likes.";
+			m_Renderer.RenderText(m_Font, ss.str(), -0.12f, 0.2f, 0.02f, 
+								  d3d11::Font::Color::RED);
+		}
+		break;
+	case State::LOST:
+		ss << "You LOST";
+		m_Renderer.RenderText(m_Font, ss.str(), -0.05f, 0.16f, 0.02f, 
+							  d3d11::Font::Color::GRAY);
+		if(m_TotalHearts) {
+			ss.str(std::string());
+			ss << "\nYou collected " << m_Hearts << " out of " << m_TotalHearts << " hearts.";
+			m_Renderer.RenderText(m_Font, ss.str(), -0.12f, 0.2f, 0.02f, 
+								  d3d11::Font::Color::RED);
+		}
+		if(m_TotalLikes) {
+			ss.str(std::string());
+			ss << "\nYou collected " << m_Likes << " out of " << m_TotalLikes << " likes.";
+			m_Renderer.RenderText(m_Font, ss.str(), -0.12f, 0.2f, 0.02f, 
+								  d3d11::Font::Color::RED);
+		}
 	}
 	m_Renderer.Flush();
 }
@@ -258,10 +544,41 @@ void Game::ProcessMouseButtonEvent(const MouseButtonEvent &event) {
 void Game::ProcessKeyboardEvent(const KeyboardEvent &event) {
 	if(event.GetPressed() == true) {
 		m_EventHandler.OnKeyDown(event.GetKey(), 0);
-		if(event.GetKey() == KeyboardEvent::Key::A || event.GetKey() == KeyboardEvent::Key::LEFT) {
-			m_Player->GetComponent<CSprite>().SetRect({0.0f, 0.0f}, {1.0f, 1.0f});
-		} else if(event.GetKey() == KeyboardEvent::Key::D || event.GetKey() == KeyboardEvent::Key::RIGHT) {
-			m_Player->GetComponent<CSprite>().SetRect({1.0f, 0.0f}, {0.0f, 1.0f});
+		if(m_State == State::PLAY) {
+			if(event.GetKey() == KeyboardEvent::Key::A || event.GetKey() == KeyboardEvent::Key::LEFT) {
+				m_Player->GetComponent<CSprite>().SetRect({1.0f, 0.0f}, {0.0f, 1.0f});
+			} else if(event.GetKey() == KeyboardEvent::Key::D || event.GetKey() == KeyboardEvent::Key::RIGHT) {
+				m_Player->GetComponent<CSprite>().SetRect({0.0f, 0.0f}, {1.0f, 1.0f});
+			}
+		}
+		if(m_State == State::MENU) {
+			switch(event.GetKey()) {
+			case KeyboardEvent::Key::ESCAPE:
+				m_ShouldClose = true;
+				break;
+			case KeyboardEvent::Key::RETURN:
+				m_State = State::PLAY;
+				break;
+			case KeyboardEvent::Key::UP:
+				if(m_CurrentMap > 0) {
+					--m_CurrentMap;
+				}
+				break;
+			case KeyboardEvent::Key::DOWN:
+				if(m_CurrentMap < nr_maps - 1) {
+					++m_CurrentMap;
+				}
+				break;
+			default:
+				break;
+			}
+		}
+		if(m_State == State::WON || m_State == State::LOST) {
+			switch(event.GetKey()) {
+			case KeyboardEvent::Key::ESCAPE:
+				m_ShouldClose = true;
+				break;
+			}
 		}
 	} else {
 		m_EventHandler.OnKeyUp(event.GetKey(), 0);
@@ -302,7 +619,7 @@ void Game::InitSettings() {
 	d3d11::Font::Init(m_Window.GetWidth(), m_Window.GetHeight());
 	m_Window.AddEventListener(this);
 
-	m_Renderer.SetClearColor({color::BLACK});
+	m_Renderer.SetClearColor({color::DARK_GRAY});
 	m_Renderer.EnableVSync(true);
 
 	m_RenderParams.SetProjection(m_Camera.GetProjectionMatrix());

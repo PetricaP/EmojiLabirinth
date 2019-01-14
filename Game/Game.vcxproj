@@ -187,6 +187,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core\InteractionSystem.h" />
+    <ClInclude Include="include\GameComponents.h" />
     <ClInclude Include="include\math\AABB2D.h" />
     <ClInclude Include="include\core\Application.h" />
     <ClInclude Include="include\core\Camera2D.h" />
@@ -221,6 +222,7 @@
     <ClInclude Include="include\graphics\VertexBuffer.h" />
     <ClInclude Include="include\core\Window.h" />
     <ClInclude Include="include\core\WindowWIN32.h" />
+    <ClInclude Include="include\Tile.h" />
     <ClInclude Include="lib\DDSTextureLoader\DDSTextureLoader.h" />
     <ClInclude Include="lib\FW1FontWrapper\CFW1ColorRGBA.h" />
     <ClInclude Include="lib\FW1FontWrapper\CFW1DWriteRenderTarget.h" />
@@ -240,17 +242,21 @@
     <ClInclude Include="lib\FW1FontWrapper\FW1Precompiled.h" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="simplePixelShader.hlsl">
+    <FxCompile Include="src\simplePixelShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)res\shaders\simplePixelShader.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)res\shaders\simplePixelShader.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)res\shaders\simplePixelShader.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)res\shaders\simplePixelShader.cso</ObjectFileOutput>
     </FxCompile>
-    <FxCompile Include="simpleVertexShader.hlsl">
+    <FxCompile Include="src\simpleVertexShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)res\shaders\simpleVertexShader.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)res\shaders\simpleVertexShader.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)res\shaders\simpleVertexShader.cso</ObjectFileOutput>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)res\shaders\simpleVertexShader.cso</ObjectFileOutput>
     </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

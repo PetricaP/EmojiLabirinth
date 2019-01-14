@@ -9,7 +9,7 @@ static std::unordered_map<HWND, Window *> _Windows;
 
 std::unique_ptr<Event> create_event(UINT msg, LPARAM lParam, WPARAM wParam) {
 	// HACK
-	static std::bitset<200> enabled{0};
+	static std::bitset<500> enabled{0};
 
 	std::unique_ptr<Event> e = nullptr;
 	SYSTEMTIME time;

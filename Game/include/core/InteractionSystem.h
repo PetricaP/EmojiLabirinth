@@ -13,6 +13,15 @@ class InteractionSystem : public ecs::Listener {
 
 	void OnAddEntity(ecs::Entity *entity) override {}
 
+	void OnRemoveEntity(ecs::Entity *entity) override {
+		for(size_t i = 0; i < m_Colliders.size(); ++i) {
+			if(m_Colliders[i]->entity == entity) {
+				m_Colliders[i] = m_Colliders[m_Colliders.size() - 1];
+				m_Colliders.pop_back();
+			}
+		}
+	}
+
 	void OnAddComponent(ecs::Component *component) override {
 		auto collider = dynamic_cast<CBoxCollider2D *>(component);
 		if(collider) {

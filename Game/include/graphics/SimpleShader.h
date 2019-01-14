@@ -7,8 +7,8 @@
 class SimpleShader : public d3d11::Shader {
   private:
 	d3d11::ConstantBuffer m_MatrixBuffer;
-	static constexpr const char m_VSFilePath[30]{"simpleVertexShader.cso"};
-	static constexpr const char m_PSFilePath[30]{"simplePixelShader.cso"};
+	static constexpr const char *m_VSFilePath{"res/shaders/simpleVertexShader.cso"};
+	static constexpr const char *m_PSFilePath{"res/shaders/simplePixelShader.cso"};
 
   public:
 	SimpleShader(const d3d11::Renderer &renderer);

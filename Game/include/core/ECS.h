@@ -111,7 +111,7 @@ class Entity {
 struct Listener {
 	virtual void OnAddComponent(Component *component) {}
 	virtual void OnAddEntity(Entity *entity) {}
-	virtual void OnRemoveEntity() {}
+	virtual void OnRemoveEntity(Entity *entity) {}
 	virtual ~Listener() {}
 };
 
@@ -147,24 +147,15 @@ class Manager {
 	}
 
 	void Refresh() {
-		for (auto i(0u); i < MAX_GROUPS; ++i) {
-			auto &entities(m_Groups[i]);
-
-			entities.erase(std::remove_if(std::begin(entities),
-										  std::end(entities),
-										  [i](Entity *entity) {
-											  return !entity->IsAlive() ||
-													 !entity->HasGroup(i);
-										  }),
-						   std::end(entities));
+		for(size_t i = 0; i < m_Entities.size(); ++i) {
+			if(!m_Entities[i]->IsAlive()) {
+				for(auto listener : m_Listeners) {
+					listener->OnRemoveEntity(m_Entities[i].get());
+				}
+				m_Entities[i] = std::move(m_Entities[m_Entities.size() - 1]);
+				m_Entities.pop_back();
+			}
 		}
-
-		m_Entities.erase(
-			std::remove_if(std::begin(m_Entities), std::end(m_Entities),
-						   [](const std::unique_ptr<Entity> &entity) {
-							   return !entity->IsAlive();
-						   }),
-			std::end(m_Entities));
 	}
 
 	Entity &AddEntity() {
