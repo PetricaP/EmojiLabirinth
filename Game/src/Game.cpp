@@ -194,6 +194,9 @@ void Game::Init() {
 std::vector<Node> create_nodes(std::vector<std::vector<Tile>> &map, Tile *node_tile);
 
 bool Game::LoadMap(const std::string &path) {
+	map.clear();
+	nodes.clear();
+	map.resize(MAX_TILES);
 	for(auto &v : map) {
 		v.resize(MAX_TILES);
 	}
@@ -346,22 +349,10 @@ bool Game::LoadMap(const std::string &path) {
 }
 
 void Game::Update(float deltaTime) {
-	static bool loaded = false;
 	if(!m_ShouldClose) {
 		m_ShouldClose = m_Window.ShouldClose();
 	}
 
-	if(!loaded && m_State != State::MENU) {
-		m_Timer.Reset();
-		if(LoadMap(m_Maps[m_CurrentMap])) {
-			loaded = true;
-			m_Renderer.SetClearColor(color::BLACK);
-		} else {
-			MessageBox(static_cast<HWND>(m_Window.GetAPIHandle()),
-				"The map could not be found!\nThis is a slot reserved for a custom user map.\nYou can find instructions on how to write one in the game directory.", "Error", MB_OK);
-			m_State = State::MENU;
-		}
-	}
 	if(m_State != State::LOST && m_State != State::MENU) {
 		if(m_Player) {
 			auto transform = m_Player->GetComponent<CTransform2D>();
@@ -388,6 +379,13 @@ void Game::Render() {
 
 	std::stringstream ss;
 	switch(m_State) {
+	case State::PAUSE:
+		ss.str(std::string());
+		ss << "R - Resume\n";
+		ss << "M - Main menu";
+		m_Renderer.RenderText(m_Font, ss.str(), -0.08f, -0.28f, 0.03f, 
+							  d3d11::Font::Color::LIGHT_BLUE);
+		break;
 	case State::MENU:
 		ss << "EMOJI LABIRINTH";
 		m_Renderer.RenderText(m_Font, ss.str(), -0.18f, -0.28f, 0.04f, 
@@ -445,6 +443,10 @@ void Game::Render() {
 			m_Renderer.RenderText(m_Font, ss.str(), -0.12f, 0.28f, 0.02f, 
 								  d3d11::Font::Color::LIGHT_BLUE);
 		}
+		ss.str(std::string());
+		ss << "Press M to go back to main menu.";
+		m_Renderer.RenderText(m_Font, ss.str(), -0.14f, 0.40f, 0.02f, 
+							  d3d11::Font::Color::GRAY);
 		break;
 	case State::LOST:
 		ss << "You LOST";
@@ -462,6 +464,10 @@ void Game::Render() {
 			m_Renderer.RenderText(m_Font, ss.str(), -0.12f, 0.28f, 0.02f, 
 								  d3d11::Font::Color::LIGHT_BLUE);
 		}
+		ss.str(std::string());
+		ss << "Press M to go back to main menu.";
+		m_Renderer.RenderText(m_Font, ss.str(), -0.14f, 0.40f, 0.02f, 
+							  d3d11::Font::Color::GRAY);
 	}
 	m_Renderer.Flush();
 }
@@ -481,6 +487,16 @@ void Game::ProcessKeyboardEvent(const KeyboardEvent &event) {
 				break;
 			case KeyboardEvent::Key::RETURN:
 				m_State = State::PLAY;
+				m_Timer.Reset();
+				m_ECS.Clear();
+				m_InteractionSystem.Clear();
+				if(LoadMap(m_Maps[m_CurrentMap])) {
+					m_Renderer.SetClearColor(color::BLACK);
+				} else {
+					MessageBox(static_cast<HWND>(m_Window.GetAPIHandle()),
+					"The map could not be found!\nThis is a slot reserved for a custom user map.\nYou can find instructions on how to write one in the game directory.", "Error", MB_OK);
+					m_State = State::MENU;
+				}
 				break;
 			case KeyboardEvent::Key::UP:
 				if(m_CurrentMap > 0) {
@@ -496,6 +512,25 @@ void Game::ProcessKeyboardEvent(const KeyboardEvent &event) {
 				break;
 			}
 		} else {
+			if(m_State == State::PAUSE) {
+				switch(event.GetKey()) {
+				case KeyboardEvent::Key::R:
+					m_Timer.Start();
+					m_State = State::PLAY;
+					break;
+				case KeyboardEvent::Key::M:
+					m_State = State::MENU;
+					break;
+				}
+			}
+			if(m_State == State::PLAY) {
+				switch(event.GetKey()) {
+				case KeyboardEvent::Key::ESCAPE:
+					m_Timer.Stop();
+					m_State = State::PAUSE;
+					break;
+				}
+			}
 			if(m_State != State::LOST) {
 				if(event.GetKey() == KeyboardEvent::Key::A || event.GetKey() == KeyboardEvent::Key::LEFT) {
 					m_Player->GetComponent<CSprite>().SetRect({1.0f, 0.0f}, {0.0f, 1.0f});
@@ -506,8 +541,8 @@ void Game::ProcessKeyboardEvent(const KeyboardEvent &event) {
 
 			if(m_State == State::WON || m_State == State::LOST) {
 				switch(event.GetKey()) {
-				case KeyboardEvent::Key::ESCAPE:
-					m_ShouldClose = true;
+				case KeyboardEvent::Key::M:
+					m_State = State::MENU;
 					break;
 				}
 			}

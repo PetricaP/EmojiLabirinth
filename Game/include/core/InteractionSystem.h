@@ -11,6 +11,10 @@ class InteractionSystem : public ecs::Listener {
 		manager.AddListener(this);
 	}
 
+	void Clear() {
+		m_Colliders.clear();
+	}
+
 	void OnAddEntity(ecs::Entity *entity) override {}
 
 	void OnRemoveEntity(ecs::Entity *entity) override {

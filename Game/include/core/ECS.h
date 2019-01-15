@@ -128,6 +128,10 @@ class Manager {
 		}
 	}
 
+	void Clear() {
+		m_Entities.clear();
+	}
+
 	void Render() {
 		for (auto &e : m_Entities) {
 			e->Render();
