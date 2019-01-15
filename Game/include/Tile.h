@@ -46,3 +46,5 @@ class Node {
 	}
 };
 
+std::vector<Node> create_nodes(std::vector<std::vector<Tile>> &map, Tile *node_tile);
+
