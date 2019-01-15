@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Utility.h"
+#include "MathUtils.h"
 #include <vector>
 
 class Node;
@@ -45,6 +46,4 @@ class Node {
 		return os;
 	}
 };
-
-std::vector<Node> create_nodes(std::vector<std::vector<Tile>> &map, Tile *node_tile);
 

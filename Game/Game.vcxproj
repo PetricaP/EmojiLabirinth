@@ -184,6 +184,7 @@
     <ClCompile Include="src\graphics\VertexBuffer.cpp" />
     <ClCompile Include="src\core\Window.cpp" />
     <ClCompile Include="src\core\WindowWIN32.cpp" />
+    <ClCompile Include="src\Tile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core\InteractionSystem.h" />

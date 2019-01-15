@@ -191,6 +191,8 @@ void Game::Init() {
 	m_EnemyTexture = m_Renderer.CreateTexture("res/textures/devil.dds");
 }
 
+std::vector<Node> create_nodes(std::vector<std::vector<Tile>> &map, Tile *node_tile);
+
 bool Game::LoadMap(const std::string &path) {
 	for(auto &v : map) {
 		v.resize(MAX_TILES);
