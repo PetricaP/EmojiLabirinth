@@ -89,7 +89,7 @@ static ecs::Entity *create_wall(ecs::Manager &ecs, RenderParams &params,
 	return wall;
 }
 
-static ecs::Entity *create_collectable(ecs::Manager &ecs, RenderParams &params,
+static ecs::Entity *create_collectable(ecs::Group group, ecs::Manager &ecs, RenderParams &params,
 	const d3d11::Texture &texture, math::vec2f position, math::vec2f extents) {
 
 	auto wall = &ecs.AddEntity();
@@ -97,7 +97,7 @@ static ecs::Entity *create_collectable(ecs::Manager &ecs, RenderParams &params,
 	wall->AddComponent<CTransform2D>();
 	wall->GetComponent<CTransform2D>().SetScale(extents);
 	wall->GetComponent<CTransform2D>().SetTranslation(position);
-	wall->AddGroup(GROUP_HEARTS);
+	wall->AddGroup(group);
 
 	wall->AddComponent<CBoxCollider2D>(
 		math::vec2f{-extents.x, -extents.y},
@@ -123,8 +123,8 @@ ecs::Entity *Game::CreatePlayer(const d3d11::Texture &texture, math::vec2f posit
 	player->AddComponent<CMotionComponent2D>();
 
 	player->AddComponent<CBoxCollider2D>(
-		math::vec2f{-0.08f, -0.08f},
-		math::vec2f{ 0.08f,  0.08f},
+		math::vec2f{-extents.x, -extents.y},
+		math::vec2f{ extents.x,  extents.y},
 		[player, this] (const CBoxCollider2D &other, const IntersectionData &data) {
 			if (other.entity->HasGroup(GROUP_WALL)) {
 				solve_wall_collission(player, other);
@@ -133,7 +133,7 @@ ecs::Entity *Game::CreatePlayer(const d3d11::Texture &texture, math::vec2f posit
 				other.entity->Destroy();
 				++m_Hearts;
 			}
-			if (other.entity->HasGroup(GROUP_HEARTS)) {
+			if (other.entity->HasGroup(GROUP_LIKES)) {
 				other.entity->Destroy();
 				++m_Likes;
 			}
@@ -172,8 +172,8 @@ ecs::Entity *Game::CreateEnemy(const d3d11::Texture &texture, Node &node,
 	enemy->AddComponent<CMotionComponent2D>();
 
 	enemy->AddComponent<CBoxCollider2D>(
-		math::vec2f{-0.08f, -0.08f},
-		math::vec2f{ 0.08f,  0.08f});
+		math::vec2f{-extents.x, -extents.y},
+		math::vec2f{ extents.x,  extents.y});
 
 	enemy->AddComponent<CEnemyControl>(node);
 
@@ -251,17 +251,18 @@ bool Game::LoadMap(const std::string &path) {
 			++column;
 			break;
 		case 'c':
-			create_collectable(m_ECS, m_RenderParams, m_HeartTexture,
+		case 'h':
+			create_collectable(GROUP_HEARTS, m_ECS, m_RenderParams, m_HeartTexture,
 				{column * WALL_WIDTH, -(line * WALL_WIDTH * 2 - WALL_WIDTH)},
 				{0.07f, 0.07f});
 			++m_TotalHearts;
 			++column;
 			break;
 		case 'l':
-			create_collectable(m_ECS, m_RenderParams, m_LikeTexture,
+			create_collectable(GROUP_LIKES, m_ECS, m_RenderParams, m_LikeTexture,
 				{column * WALL_WIDTH, -(line * WALL_WIDTH * 2 - WALL_WIDTH)},
 				{0.07f, 0.07f});
-			++m_TotalHearts;
+			++m_TotalLikes;
 			++column;
 			break;
 		case '\n':
@@ -459,8 +460,8 @@ void Game::Render() {
 	std::stringstream ss;
 	switch(m_State) {
 	case State::MENU:
-		ss << "MENU";
-		m_Renderer.RenderText(m_Font, ss.str(), -0.08f, -0.28f, 0.04f, 
+		ss << "EMOJI LABIRINTH";
+		m_Renderer.RenderText(m_Font, ss.str(), -0.18f, -0.28f, 0.04f, 
 							  d3d11::Font::Color::LIGHT_BLUE);
 		d3d11::Font::Color color;
 		for(uint32_t i = 0; i < nr_maps; ++i) {
@@ -475,15 +476,15 @@ void Game::Render() {
 				color = d3d11::Font::Color::GRAY;
 			}
 			ss << map_string << std::endl;
-			m_Renderer.RenderText(m_Font, ss.str(), -0.06f, 0.30f - (nr_maps - i) * 0.07f, 0.03f, 
+			m_Renderer.RenderText(m_Font, ss.str(), -0.05f, 0.30f - (nr_maps - i) * 0.07f, 0.03f, 
 								  color);
 		}
 		break;
 	case State::PLAY:
 	#if defined(DEBUG) || defined(_DEBUG)
-		ss << "Frame Time: " << std::setprecision(2) << m_Timer.DeltaTime() << std::endl;
+		ss << "Frame Time: " << std::setprecision(2) << m_Timer.DeltaTime();
 	#endif
-		ss << "Time: " << static_cast<uint32_t>(m_Timer.TotalTime());
+		ss << "\nTime: " << static_cast<uint32_t>(m_Timer.TotalTime());
 		m_Renderer.RenderText(m_Font, ss.str(), -0.48f, -0.48f, 0.02f, 
 							  d3d11::Font::Color::GRAY);
 		if(m_TotalHearts) {
@@ -495,8 +496,8 @@ void Game::Render() {
 		if(m_TotalLikes) {
 			ss.str(std::string());
 			ss << "Likes: " << m_Likes;
-			m_Renderer.RenderText(m_Font, ss.str(), -0.48f, -0.38f, 0.02f, 
-								  d3d11::Font::Color::RED);
+			m_Renderer.RenderText(m_Font, ss.str(), -0.48f, -0.32f, 0.02f, 
+								  d3d11::Font::Color::LIGHT_BLUE);
 		}
 		break;
 	case State::WON:
@@ -512,8 +513,8 @@ void Game::Render() {
 		if(m_TotalLikes) {
 			ss.str(std::string());
 			ss << "\nYou collected " << m_Likes << " out of " << m_TotalLikes << " likes.";
-			m_Renderer.RenderText(m_Font, ss.str(), -0.12f, 0.2f, 0.02f, 
-								  d3d11::Font::Color::RED);
+			m_Renderer.RenderText(m_Font, ss.str(), -0.12f, 0.28f, 0.02f, 
+								  d3d11::Font::Color::LIGHT_BLUE);
 		}
 		break;
 	case State::LOST:
@@ -529,8 +530,8 @@ void Game::Render() {
 		if(m_TotalLikes) {
 			ss.str(std::string());
 			ss << "\nYou collected " << m_Likes << " out of " << m_TotalLikes << " likes.";
-			m_Renderer.RenderText(m_Font, ss.str(), -0.12f, 0.2f, 0.02f, 
-								  d3d11::Font::Color::RED);
+			m_Renderer.RenderText(m_Font, ss.str(), -0.12f, 0.28f, 0.02f, 
+								  d3d11::Font::Color::LIGHT_BLUE);
 		}
 	}
 	m_Renderer.Flush();
@@ -544,13 +545,6 @@ void Game::ProcessMouseButtonEvent(const MouseButtonEvent &event) {
 void Game::ProcessKeyboardEvent(const KeyboardEvent &event) {
 	if(event.GetPressed() == true) {
 		m_EventHandler.OnKeyDown(event.GetKey(), 0);
-		if(m_State == State::PLAY) {
-			if(event.GetKey() == KeyboardEvent::Key::A || event.GetKey() == KeyboardEvent::Key::LEFT) {
-				m_Player->GetComponent<CSprite>().SetRect({1.0f, 0.0f}, {0.0f, 1.0f});
-			} else if(event.GetKey() == KeyboardEvent::Key::D || event.GetKey() == KeyboardEvent::Key::RIGHT) {
-				m_Player->GetComponent<CSprite>().SetRect({0.0f, 0.0f}, {1.0f, 1.0f});
-			}
-		}
 		if(m_State == State::MENU) {
 			switch(event.GetKey()) {
 			case KeyboardEvent::Key::ESCAPE:
@@ -572,12 +566,21 @@ void Game::ProcessKeyboardEvent(const KeyboardEvent &event) {
 			default:
 				break;
 			}
-		}
-		if(m_State == State::WON || m_State == State::LOST) {
-			switch(event.GetKey()) {
-			case KeyboardEvent::Key::ESCAPE:
-				m_ShouldClose = true;
-				break;
+		} else {
+			if(m_State != State::LOST) {
+				if(event.GetKey() == KeyboardEvent::Key::A || event.GetKey() == KeyboardEvent::Key::LEFT) {
+					m_Player->GetComponent<CSprite>().SetRect({1.0f, 0.0f}, {0.0f, 1.0f});
+				} else if(event.GetKey() == KeyboardEvent::Key::D || event.GetKey() == KeyboardEvent::Key::RIGHT) {
+					m_Player->GetComponent<CSprite>().SetRect({0.0f, 0.0f}, {1.0f, 1.0f});
+				}
+			}
+
+			if(m_State == State::WON || m_State == State::LOST) {
+				switch(event.GetKey()) {
+				case KeyboardEvent::Key::ESCAPE:
+					m_ShouldClose = true;
+					break;
+				}
 			}
 		}
 	} else {

@@ -21,7 +21,7 @@ class Font {
 		BLACK = 0xff000000,
 		GRAY = 0xff555555,
 		BLUE = 0xff0000ff,
-		LIGHT_BLUE = 0xffdd5555,
+		LIGHT_BLUE = 0xffdd9999,
 		RED = 0xff3322cc,
 		GREEN = 0xff00ff00,
 		ORANGE = 0xff5599ff,

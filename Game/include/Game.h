@@ -9,7 +9,6 @@
 #include "InteractionSystem.h"
 #include "Tile.h"
 
-
 class Game : public Application {
 	enum class State { MENU, WON, PLAY, LOST, PAUSE };
 	enum Map : uint32_t { MAP_ONE, MAP_TWO, MAP_THREE, MAP_FOUR, MAP_FIVE };
@@ -26,7 +25,7 @@ class Game : public Application {
 
 	static constexpr uint32_t INITIAL_WIDTH{1280u};
 	static constexpr uint32_t INITIAL_HEIGHT{720u};
-	static constexpr const char *TITLE{"Hello DirectX!"};
+	static constexpr const char *TITLE{"Emoji Labirinth"};
 
 	win32::Window m_Window;
 	win32::Timer m_Timer;
@@ -68,7 +67,7 @@ class Game : public Application {
 	uint32_t m_CurrentMap;
 	bool m_ShouldClose;
 
-	static constexpr size_t MAX_TILES = 40;
+	static constexpr size_t MAX_TILES = 60;
 	std::vector<std::vector<Tile>> map;
 	std::vector<Node> nodes;
 

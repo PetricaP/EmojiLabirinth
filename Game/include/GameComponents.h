@@ -40,7 +40,8 @@ class CEnemyControl : public ecs::Component {
 			auto nextNode = m_NextNode->GetNeighbors()[randIndex]->node;
 			if(nextNode == m_LastNode && m_NextNode->GetNeighbors().size() > 1) {
 				auto newRandIndex = randIndex;
-				while(newRandIndex == randIndex) {
+				int i = 0;
+				while(newRandIndex == randIndex && i < 2) {
 					newRandIndex = rand() % m_NextNode->GetNeighbors().size();
 				}
 				nextNode = m_NextNode->GetNeighbors()[newRandIndex]->node;
